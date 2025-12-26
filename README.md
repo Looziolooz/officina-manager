@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚗 Officina Manager
 
-## Getting Started
+Sistema gestionale moderno per autofficine meccatroniche, sviluppato con le ultime tecnologie web per garantire velocità, scalabilità e automazione.
 
-First, run the development server:
+## 🛠 Tech Stack
 
+- **Framework:** Next.js 16.1 (App Router & Turbopack)
+- **Database:** SQLite (Locale) via Prisma ORM
+- **UI:** Tailwind CSS + Lucide React Icons
+- **Auth:** NextAuth.js v5 (Credenziali sicure)
+- **Email:** Resend (per notifiche automatiche)
+- **Linguaggio:** TypeScript
+
+---
+
+## ✅ Funzionalità Implementate
+
+### 1. Gestione Officina (Workflow)
+- **Accettazione Veicolo:** Inserimento rapido con Targa, Modello, KM, Dati Cliente.
+- **Schede Lavoro:** Gestione stati (*In Attesa, In Lavorazione, Attesa Pezzi, Completato, Consegnato*).
+- **Gestione Ricambi:** Aggiunta pezzi di ricambio alla scheda lavoro con calcolo automatico costi.
+- **Calcolo Totali:** Somma automatica di Manodopera + Ricambi.
+- **Aggiornamento Automatico:** Al momento della consegna ("Consegnato"), il sistema aggiorna le date di Revisione/Tagliando del veicolo se rilevate nella descrizione.
+
+### 2. CRM Clienti Avanzato
+- **Anagrafica Completa:** Dati cliente, telefono, email.
+- **Garage Virtuale:** Lista di tutti i veicoli posseduti dal cliente.
+- **Timeline Interventi:** Cronologia dettagliata di tutti i lavori passati con costi e dettagli.
+- **Note Interne:** Campo note modificabile per appunti riservati sull'utente.
+- **Business Intelligence:** Statistiche automatiche (Spesa Totale, Numero Interventi, Status VIP).
+
+### 3. Automazione & Marketing
+- **Cron Job Scadenze:** Sistema che scansiona il DB per trovare auto con Tagliando (11 mesi) o Revisione (23 mesi) in scadenza.
+- **Email Automatiche:** Invio reminder tramite API Resend.
+
+### 4. Sicurezza & Admin
+- **Login Protetto:** Autenticazione admin con hashing della password (bcrypt).
+- **Compatibilità React 19:** Utilizzo dei nuovi hook `useActionState` per i form.
+
+---
+
+## 🚀 Installazione e Setup
+
+### 1. Prerequisiti
+Assicurati di avere Node.js installato.
+
+### 2. Installazione dipendenze
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+npm install
