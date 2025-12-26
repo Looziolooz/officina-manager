@@ -1,5 +1,7 @@
-import { getJobs, createJob, updateJobStatus, JOB_STATUS } from "@/app/actions/workshop";
+import { getJobs, createJob, updateJobStatus } from "@/app/actions/workshop";
+import { JOB_STATUS } from "@/lib/constants"; // Import corretto
 import { Car, Clock, CheckCircle2, AlertCircle, PlayCircle, Wrench, Package } from "lucide-react";
+import Link from "next/link";
 
 // Tipo manuale per aiutare TypeScript nel frontend
 type JobWithDetails = {
@@ -45,35 +47,47 @@ export default async function OfficinaPage() {
             "use server";
             await createJob(formData);
           }} 
-          className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+          className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end"
         >
-          <div className="md:col-span-1">
+          {/* RIGA 1: DATI VEICOLO */}
+          <div className="md:col-span-2">
             <label className="text-xs text-slate-400 ml-1">Targa</label>
             <input name="plate" required placeholder="AA000BB" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white uppercase font-mono tracking-widest focus:border-orange-500 outline-none transition-colors" />
           </div>
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <label className="text-xs text-slate-400 ml-1">Modello</label>
             <input name="model" required placeholder="Es. Fiat Panda" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
           </div>
-          <div className="md:col-span-1">
-            <label className="text-xs text-slate-400 ml-1">Cliente</label>
-            <input name="firstName" required placeholder="Mario Rossi" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
+          <div className="md:col-span-2">
+            <label className="text-xs text-slate-400 ml-1">Km Attuali</label>
+            <input type="number" name="km" required placeholder="150000" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
           </div>
-          <div className="md:col-span-1">
+
+          {/* RIGA 2: DATI CLIENTE */}
+          <div className="md:col-span-2">
+            <label className="text-xs text-slate-400 ml-1">Nome</label>
+            <input name="firstName" required placeholder="Mario" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-slate-400 ml-1">Cognome</label>
+            <input name="lastName" required placeholder="Rossi" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
+          </div>
+          <div className="md:col-span-2">
             <label className="text-xs text-slate-400 ml-1">Telefono</label>
             <input name="phone" required placeholder="340..." className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
           </div>
+          
+          {/* RIGA 3: DESCRIZIONE E BOTTONE */}
+          <div className="md:col-span-5">
+             <label className="text-xs text-slate-400 ml-1">Descrizione Problema / Lavori da fare</label>
+             <input name="description" required placeholder="Es. Tagliando completo, rumore freni..." className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
+          </div>
+          
           <div className="md:col-span-1">
             <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-orange-900/20 active:scale-95 flex items-center justify-center gap-2">
               <Wrench className="w-4 h-4" />
               Accetta
             </button>
-          </div>
-          
-          <div className="md:col-span-5 mt-2">
-             <label className="text-xs text-slate-400 ml-1">Lavori da fare</label>
-             <input name="description" required placeholder="Es. Tagliando completo, rumore freni..." className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-orange-500 transition-colors" />
-             <input type="hidden" name="km" value="0" /> 
           </div>
         </form>
       </div>
@@ -88,7 +102,11 @@ export default async function OfficinaPage() {
               
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h4 className="text-2xl font-mono font-bold text-white tracking-wider group-hover:text-orange-500 transition-colors">{job.vehicle.plate}</h4>
+                  <Link href={`/admin/officina/${job.id}`} className="hover:underline decoration-orange-500 underline-offset-4">
+                    <h4 className="text-2xl font-mono font-bold text-white tracking-wider group-hover:text-orange-500 transition-colors">
+                      {job.vehicle.plate}
+                    </h4>
+                  </Link>
                   <p className="text-sm text-slate-400">{job.vehicle.model}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${statusStyle.color}`}>

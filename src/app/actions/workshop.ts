@@ -3,15 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client"; 
 import { revalidatePath } from "next/cache";
-
-// Definiamo le costanti manualmente per gli stati (sostituisce l'Enum)
-export const JOB_STATUS = {
-  PENDING: "PENDING",
-  IN_PROGRESS: "IN_PROGRESS",
-  WAITING_PARTS: "WAITING_PARTS",
-  COMPLETED: "COMPLETED",
-  DELIVERED: "DELIVERED"
-};
+import { JOB_STATUS } from "@/lib/constants"; 
 
 // 1. LEGGI: Recupera i lavori (Escludendo quelli già consegnati/archiviati)
 export async function getJobs() {
@@ -38,51 +30,55 @@ export async function getJobs() {
   }
 }
 
-// 2. CREA: Nuovo ingresso con transazione (Cliente + Veicolo + Job)
+// 2. CREA: Nuovo ingresso (Con Cognome, Telefono e Km)
 export async function createJob(formData: FormData) {
   const plate = (formData.get("plate") as string)?.toUpperCase().replace(/\s/g, '');
   const model = formData.get("model") as string;
   const description = formData.get("description") as string;
   
-  // Gestione sicura del numero km
+  // Gestione Km
   const kmInput = formData.get("km");
   const km = kmInput ? parseInt(kmInput as string) : 0;
   
   const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string; 
   const phone = formData.get("phone") as string;
 
-  if (!plate || !firstName || !phone) {
+  if (!plate || !firstName || !lastName || !phone) {
     return { success: false, error: "Dati obbligatori mancanti" };
   }
 
   try {
-    // Usiamo una transazione per garantire che o salva tutto o nulla
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       
-      // 1. Trova o Crea Cliente
+      // A. Trova o Crea Cliente (con Cognome)
       const customer = await tx.customer.upsert({
         where: { phone: phone },
-        update: { firstName },
+        update: { 
+          firstName, 
+          lastName 
+        },
         create: {
           firstName,
-          lastName: "", // Opzionale per velocità
+          lastName,
           phone,
-          email: `temp-${Date.now()}@no-mail.com` // Placeholder
+          email: `temp-${Date.now()}@no-mail.com`
         }
       });
 
-      // 2. Trova o Crea Veicolo
+      // B. Trova o Crea Veicolo (con Km)
       const vehicle = await tx.vehicle.upsert({
         where: { plate: plate },
         update: { kmCount: km },
         create: {
           plate,
           model,
-          customerId: customer.id
+          customerId: customer.id,
+          kmCount: km
         }
       });
 
-      // 3. Crea Scheda Lavoro
+      // C. Crea Scheda Lavoro
       await tx.job.create({
         data: {
           vehicleId: vehicle.id,
@@ -101,7 +97,7 @@ export async function createJob(formData: FormData) {
   }
 }
 
-// 3. AGGIORNA: Cambia stato e gestisce AUTOMAZIONE SCADENZE (Step 7)
+// 3. AGGIORNA: Cambia stato lavoro
 export async function updateJobStatus(jobId: string, newStatus: string) {
   try {
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -110,17 +106,14 @@ export async function updateJobStatus(jobId: string, newStatus: string) {
         where: { id: jobId },
         data: { 
           status: newStatus,
-          // Se lo stato è DELIVERED, salviamo la data di fine lavori oggi
           endDate: newStatus === JOB_STATUS.DELIVERED ? new Date() : null
         },
-        include: { vehicle: true } // Ci serve il veicolo per aggiornare le scadenze
+        include: { vehicle: true }
       });
 
-      // B. LOGICA FIDELIZZAZIONE: Se il lavoro è CONSEGNATO, aggiorniamo le date del veicolo
+      // B. Logica Fidelizzazione (Aggiorna date veicolo se necessario)
       if (newStatus === JOB_STATUS.DELIVERED) {
         const desc = job.description.toLowerCase();
-        
-        // Cerca parole chiave nella descrizione (tagliando, olio, revisione)
         const isTagliando = desc.includes("tagliando") || desc.includes("olio");
         const isRevisione = desc.includes("revisione");
 
@@ -128,9 +121,7 @@ export async function updateJobStatus(jobId: string, newStatus: string) {
           await tx.vehicle.update({
             where: { id: job.vehicleId },
             data: {
-              // Se era un tagliando, aggiorna la data ultimo tagliando a OGGI
               lastOilChange: isTagliando ? new Date() : job.vehicle.lastOilChange,
-              // Se era una revisione, aggiorna la data ultima revisione a OGGI
               lastRevisionDate: isRevisione ? new Date() : job.vehicle.lastRevisionDate
             }
           });
@@ -138,12 +129,26 @@ export async function updateJobStatus(jobId: string, newStatus: string) {
       }
     });
 
-    // Aggiorniamo sia la bacheca officina che la lista clienti (per i bollini rossi/verdi)
     revalidatePath("/admin/officina");
     revalidatePath("/admin/clienti");
     return { success: true };
   } catch (error) {
     console.error("Errore update status:", error);
     return { success: false, error: "Errore aggiornamento stato" };
+  }
+}
+
+// 4. NUOVO: Aggiorna Note Cliente
+export async function updateCustomerNotes(customerId: string, notes: string) {
+  try {
+    await prisma.customer.update({
+      where: { id: customerId },
+      data: { notes }
+    });
+    revalidatePath(`/admin/clienti/${customerId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Errore salvataggio note:", error);
+    return { success: false, error: "Errore salvataggio note" };
   }
 }

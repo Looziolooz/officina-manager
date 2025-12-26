@@ -8,18 +8,17 @@ import {
   Package, 
   BarChart3, 
   Users, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  Settings,
   LogOut 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logout } from "@/app/actions/auth"; // [!code ++] Importiamo l'azione sicura
 
 const menuItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Officina", href: "/officina", icon: Wrench },
-  { name: "Magazzino", href: "/magazzino", icon: Package },
-  { name: "Clienti", href: "/clienti", icon: Users }, // <--- Assicurati che ci sia questo
-  { name: "Contabilità", href: "/contabilita", icon: BarChart3 },
+  { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard }, // Nota: Ho aggiunto /admin/ per sicurezza nei link
+  { name: "Officina", href: "/admin/officina", icon: Wrench },
+  { name: "Magazzino", href: "/admin/magazzino", icon: Package },
+  { name: "Clienti", href: "/admin/clienti", icon: Users },
+  { name: "Contabilità", href: "/admin/contabilita", icon: BarChart3 },
 ];
 
 export default function AdminSidebar() {
@@ -56,10 +55,13 @@ export default function AdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-slate-800">
-        <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-400 hover:text-red-400 transition-colors">
-          <LogOut className="w-5 h-5" />
-          Esci
-        </button>
+        {/* [!code ++] Form collegato alla Server Action */}
+        <form action={logout}>
+          <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-slate-400 hover:text-red-400 transition-colors">
+            <LogOut className="w-5 h-5" />
+            Esci
+          </button>
+        </form>
       </div>
     </div>
   );

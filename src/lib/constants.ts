@@ -17,3 +17,12 @@ export const NAV_LINKS = [
   { name: "Chi Siamo", href: "/chi-siamo" },
   { name: "Contatti", href: "/contatti" },
 ];
+
+// Definiamo qui gli stati per poterli importare ovunque senza errori "use server"
+export const JOB_STATUS = {
+  PENDING: "PENDING",
+  IN_PROGRESS: "IN_PROGRESS",
+  WAITING_PARTS: "WAITING_PARTS",
+  COMPLETED: "COMPLETED",
+  DELIVERED: "DELIVERED"
+};

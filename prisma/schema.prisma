@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,8 +25,11 @@ model Customer {
   firstName       String
   lastName        String
   email           String?   @unique
-  phone           String    @unique // Chiave unica per riconoscere il cliente
+  phone           String    @unique
   consentMarketing Boolean  @default(true)
+  
+  notes           String?   // <--- QUESTA RIGA È FONDAMENTALE
+  
   vehicles        Vehicle[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -38,10 +43,11 @@ model Vehicle {
   chassisNumber   String?
   registrationDate DateTime?
   
+  kmCount         Int       @default(0) // [!code ++] Campo aggiunto per correggere l'errore
+
   // Campi per automazione scadenze
   lastRevisionDate DateTime?
   lastOilChange    DateTime?
-  
   customerId      String
   customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
