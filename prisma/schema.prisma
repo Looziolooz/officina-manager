@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- UTENTI (Login) ---
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+}
+
+// --- CRM (Clienti) ---
+model Customer {
+  id              String    @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String?   @unique
+  phone           String    @unique // Chiave unica per riconoscere il cliente
+  consentMarketing Boolean  @default(true)
+  vehicles        Vehicle[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// --- VEICOLI ---
+model Vehicle {
+  id              String    @id @default(uuid())
+  plate           String    @unique
+  model           String
+  chassisNumber   String?
+  registrationDate DateTime?
+  
+  // Campi per automazione scadenze
+  lastRevisionDate DateTime?
+  lastOilChange    DateTime?
+  
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  jobs            Job[]
+  createdAt       DateTime  @default(now())
+}
+
+// --- OFFICINA (Schede Lavoro) ---
+model Job {
+  id          String    @id @default(uuid())
+  
+  vehicleId   String
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
+  
+  // FIX: Usiamo String invece di Enum per compatibilità SQLite
+  status      String    @default("PENDING") 
+  description String
+  
+  laborCost   Float     @default(0)
+  partsCost   Float     @default(0)
+  totalCost   Float     @default(0)
+  
+  kmCount     Int
+  
+  items       JobItem[]
+  
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+}
+
+// --- MAGAZZINO ---
+model Part {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  name          String
+  description   String?
+  stockQuantity Int       @default(0)
+  minThreshold  Int       @default(5)
+  buyPrice      Float
+  sellPrice     Float
+  
+  jobItems      JobItem[]
+}
+
+// --- RELAZIONE PEZZI USATI NEI LAVORI ---
+model JobItem {
+  id        String  @id @default(uuid())
+  jobId     String
+  job       Job     @relation(fields: [jobId], references: [id])
+  
+  partId    String
+  part      Part    @relation(fields: [partId], references: [id])
+  
+  quantity  Int     @default(1)
+  unitPrice Float
+}
