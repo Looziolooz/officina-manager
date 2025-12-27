@@ -2,35 +2,31 @@
 
 import { prisma } from "@/lib/prisma";
 
-// 1. Recupera Clienti e calcola scadenze
-export async function getCustomersWithStatus() {
+export async function searchCustomers(query: string) {
+  if (!query || query.length < 2) return [];
+
   try {
     const customers = await prisma.customer.findMany({
-      include: {
-        vehicles: {
-          orderBy: { createdAt: 'desc' }
-        }
+      where: {
+        OR: [
+          { firstName: { contains: query } },
+          { lastName: { contains: query } },
+          { phone: { contains: query } },
+          { 
+            vehicles: { 
+              some: { plate: { contains: query.toUpperCase().replace(/\s/g, '') } } 
+            } 
+          }
+        ],
       },
-      orderBy: { firstName: 'asc' }
+      include: {
+        vehicles: true // Includiamo i veicoli per popolare l'anno se già noto
+      },
+      take: 5,
     });
-    return { success: true, data: customers };
+    return customers;
   } catch (error) {
-    // FIX: Ora usiamo la variabile error loggandola
-    console.error("Errore recupero clienti:", error);
-    return { success: false, data: [] };
+    console.error("Errore ricerca avanzata:", error);
+    return [];
   }
-}
-
-// 2. Simula invio SMS/Email
-export async function sendReminder(customerId: string, vehiclePlate: string, type: 'TAGLIANDO' | 'REVISIONE') {
-  // Qui in produzione useremmo Twilio o SendGrid.
-  // In dev, simuliamo un ritardo di rete.
-  
-  await new Promise(resolve => setTimeout(resolve, 1500)); // Aspetta 1.5 secondi
-
-  // Log per simulare l'invio
-  console.log(`>>> MOCK SMS INVIATO A CLIENTE ${customerId}`);
-  console.log(`>>> Messaggio: Ciao! La tua auto ${vehiclePlate} deve fare la ${type}. Prenota ora!`);
-
-  return { success: true, message: "Promemoria inviato con successo!" };
 }

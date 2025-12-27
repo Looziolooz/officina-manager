@@ -1,5 +1,3 @@
-// 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- UTENTI (Login) ---
+// --- UTENTI ---
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -21,90 +19,101 @@ model User {
 
 // --- CRM (Clienti) ---
 model Customer {
-  id             String    @id @default(uuid())
-  firstName      String
-  lastName       String
-  email          String?   @unique
-  phone          String    @unique
-  consentMarketing Boolean  @default(true)
+  id               String    @id @default(uuid())
+  firstName        String
+  lastName         String
+  // Rimosso @unique dall'email per evitare blocchi se più clienti non la forniscono
+  // Il telefono resta l'unico identificativo univoco
+  email            String?   
+  phone            String    @unique
+  consentMarketing Boolean   @default(true)
+  familyNotes      String?   
+  notes            String?
   
-  notes          String?
-  
-  vehicles       Vehicle[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  vehicles         Vehicle[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 // --- VEICOLI ---
 model Vehicle {
-  id              String    @id @default(uuid())
-  plate           String    @unique
-  model           String
-  chassisNumber   String?
-  registrationDate DateTime?
-  
-  kmCount         Int       @default(0)
+  id                String    @id @default(uuid())
+  plate             String    @unique
+  model             String
+  year              Int?
+  chassisNumber     String?
+  registrationDate  DateTime?
+  kmCount           Int       @default(0)
 
-  // Campi per automazione scadenze
-  lastRevisionDate DateTime?
-  lastOilChange    DateTime?
+  lastRevisionDate  DateTime?
+  lastOilChange     DateTime?
   
-  customerId      String
-  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
-  jobs            Job[]
-  createdAt       DateTime  @default(now())
+  jobs              Job[]
+  createdAt         DateTime  @default(now())
+
+  // Indice per velocizzare la ricerca rapida per targa
+  @@index([plate])
 }
 
-// --- OFFICINA (Schede Lavoro) ---
+// --- OFFICINA ---
 model Job {
-  id          String    @id @default(uuid())
-  
-  vehicleId   String
-  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
- 
-  // STATI: "SCHEDULATO", "IN_LAVORAZIONE", "ATTESA_RICAMBI", "COMPLETATO", "CONSEGNATO"
-  status      String    @default("SCHEDULATO") 
-  description String
-  internalNotes String? // Note interne per i meccanici
-
-  // Costi e preventivi
-  laborCost   Float     @default(0)
-  partsCost   Float     @default(0)
-  totalCost   Float     @default(0)
-  
-  kmCount     Int // Km registrati all'ingresso
-  
-  items       JobItem[]
-
-  // Workflow temporale
-  scheduledDate DateTime? // <--- QUESTO È IL CAMPO CHE MANCAVA
-  startDate     DateTime? // Data inizio lavori effettivi
-  endDate       DateTime? // Data fine lavori
-  
-  // Collegamento alla fattura (1 Job può avere 1 Fattura)
-  invoice     Invoice?
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  vehicleId     String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  status        String    @default("SCHEDULATO") 
+  description   String
+  internalNotes String?   
+  laborCost     Float     @default(0)
+  partsCost     Float     @default(0)
+  totalCost     Float     @default(0)
+  kmCount       Int       
+  items         JobItem[]
+  scheduledDate DateTime?
+  startDate     DateTime? 
+  endDate       DateTime? 
+  invoice       Invoice?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
-// --- CONTABILITÀ (Nuovo Modello) ---
+// --- VOCI DI SPESA ---
+model JobItem {
+  id          String  @id @default(uuid())
+  jobId       String
+  job         Job     @relation(fields: [jobId], references: [id])
+  partId      String? 
+  part        Part?   @relation(fields: [partId], references: [id])
+  description String  
+  quantity    Int     @default(1)
+  unitPrice   Float   
+  unitCost    Float   @default(0)
+}
+
+// --- CONTABILITÀ ---
+model BusinessExpense {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  description String
+  amount      Float
+  category    String   
+  notes       String?
+}
+
+// --- FATTURAZIONE ---
 model Invoice {
   id          String    @id @default(uuid())
-  number      Int       // Numero progressivo annuale (es. 1, 2, 3...)
-  year        Int       // Anno di riferimento (es. 2024)
-  
+  number      Int       
+  year        Int       
   jobId       String    @unique
   job         Job       @relation(fields: [jobId], references: [id])
-  
-  amount      Float     // Imponibile
-  taxRate     Float     @default(22.0) // IVA
-  totalAmount Float     // Totale
-  
+  amount      Float     
+  taxRate     Float     @default(22.0)
+  totalAmount Float     
   isPaid      Boolean   @default(false)
   paidAt      DateTime?
-  
   issuedAt    DateTime  @default(now())
 
   @@unique([year, number])
@@ -115,24 +124,11 @@ model Part {
   id            String    @id @default(uuid())
   code          String    @unique
   name          String
+  category      String?   @default("RICAMBI")
   description   String?
   stockQuantity Int       @default(0)
   minThreshold  Int       @default(5)
   buyPrice      Float
   sellPrice     Float
-  
   jobItems      JobItem[]
-}
-
-// --- RELAZIONE PEZZI USATI NEI LAVORI ---
-model JobItem {
-  id        String  @id @default(uuid())
-  jobId     String
-  job       Job     @relation(fields: [jobId], references: [id])
-  
-  partId    String
-  part      Part    @relation(fields: [partId], references: [id])
-  
-  quantity  Int     @default(1)
-  unitPrice Float
 }
