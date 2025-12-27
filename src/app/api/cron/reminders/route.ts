@@ -1,8 +1,10 @@
+// 
+
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
-// Inizializza Resend (se manca la key, userà i log)
+// Inizializza Resend (se manca la key, userà i log per testare)
 const resend = process.env.RESEND_API_KEY 
   ? new Resend(process.env.RESEND_API_KEY) 
   : null;
@@ -12,41 +14,56 @@ export async function GET() {
     const today = new Date();
     let emailsSent = 0;
 
-    // --- LOGICA DATE ---
+    // --- 1. DEFINIZIONE FINESTRE TEMPORALI ---
     
-    // 1. Obiettivo TAGLIANDO: Auto che hanno fatto l'ultimo cambio olio circa 11 mesi fa
+    // Obiettivo TAGLIANDO: Auto che hanno fatto l'ultimo cambio olio circa 11 mesi fa
     const targetOilDate = new Date();
     targetOilDate.setMonth(today.getMonth() - 11);
-    
-    // Finestra Tagliando: cerchiamo da 11 mesi fa fino a 10 mesi fa (arco di 30gg)
-    // Così prendiamo tutte le auto che stanno per scadere nel prossimo mese
-    const windowStartOil = new Date(targetOilDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const windowStartOil = new Date(targetOilDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Finestra di 30gg
 
-    // 2. Obiettivo REVISIONE: Auto che hanno fatto l'ultima revisione circa 23 mesi fa
+    // Obiettivo REVISIONE: Auto che hanno fatto l'ultima revisione circa 23 mesi fa
     const targetRevDate = new Date();
     targetRevDate.setMonth(today.getMonth() - 23);
-    const windowStartRev = new Date(targetRevDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const windowStartRev = new Date(targetRevDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Finestra di 30gg
 
-    console.log(`🤖 CRON STARTED. Searching for:`);
-    console.log(`   - Oil changes between ${windowStartOil.toLocaleDateString()} and ${targetOilDate.toLocaleDateString()}`);
-    console.log(`   - Revisions between ${windowStartRev.toLocaleDateString()} and ${targetRevDate.toLocaleDateString()}`);
+    console.log(`🤖 CRON STARTED. Searching for vehicles...`);
 
-    // --- QUERY ---
+    // --- 2. QUERY INTELLIGENTE ---
     const vehiclesToNotify = await prisma.vehicle.findMany({
       where: {
-        OR: [
-          // A. Scadenza Tagliando
+        AND: [
           {
-            lastOilChange: {
-              lte: targetOilDate,   // Più vecchio di 11 mesi fa
-              gte: windowStartOil   // Ma non più vecchio di 12 mesi (evitiamo spam a chi è scaduto da tempo)
-            }
+            OR: [
+              // A. Scadenza Tagliando (tra 11 e 12 mesi dall'ultimo)
+              {
+                lastOilChange: {
+                  lte: targetOilDate,
+                  gte: windowStartOil
+                }
+              },
+              // B. Scadenza Revisione (tra 23 e 24 mesi dall'ultima)
+              {
+                lastRevisionDate: {
+                  lte: targetRevDate,
+                  gte: windowStartRev
+                }
+              }
+            ]
           },
-          // B. Scadenza Revisione
+          // C. ESCLUSIONE: Non disturbare chi ha già lavori recenti o programmati!
           {
-            lastRevisionDate: {
-              lte: targetRevDate,
-              gte: windowStartRev
+            jobs: {
+              none: {
+                OR: [
+                  { status: "SCHEDULATO" },      // Ha già un appuntamento
+                  { status: "IN_LAVORAZIONE" },  // È già in officina
+                  // Ha finito un lavoro negli ultimi 30 giorni (magari ha appena fatto il tagliando ma non abbiamo aggiornato la data)
+                  { 
+                    status: "COMPLETATO",
+                    endDate: { gte: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000) }
+                  }
+                ]
+              }
             }
           }
         ]
@@ -56,52 +73,59 @@ export async function GET() {
       }
     });
 
-    // --- INVIO EMAIL ---
+    // --- 3. INVIO EMAIL ---
     for (const vehicle of vehiclesToNotify) {
-      // Salta chi non ha email o ha mail fittizia
-      if (!vehicle.customer.email || vehicle.customer.email.includes("no-mail")) {
-        console.log(`⏩ Skipped ${vehicle.plate}: No valid email`);
+      // Salta chi non ha email valida
+      if (!vehicle.customer.email || vehicle.customer.email.includes("no-mail") || !vehicle.customer.consentMarketing) {
+        console.log(`⏩ Skipped ${vehicle.plate}: No valid email or no consent`);
         continue;
       }
 
-      // Determina il tipo di avviso
-      // Se lastRevisionDate rientra nella finestra targetRevDate, allora è una revisione
+      // Determina il tipo di scadenza predominante
       const isRevisione = vehicle.lastRevisionDate && 
                           vehicle.lastRevisionDate <= targetRevDate && 
                           vehicle.lastRevisionDate >= windowStartRev;
 
       const tipoScadenza = isRevisione ? "Revisione Biennale" : "Tagliando Annuale";
-      
       const emailSubject = `⚠️ Scadenza ${tipoScadenza} - ${vehicle.plate}`;
       
-      // Template HTML Semplice
       const emailBody = `
-        <div style="font-family: sans-serif; color: #333;">
-          <h1>Ciao ${vehicle.customer.firstName},</h1>
-          <p>Ti ricordiamo che la tua <strong>${vehicle.model}</strong> (Targa: <strong>${vehicle.plate}</strong>) ha la <strong>${tipoScadenza}</strong> in scadenza il prossimo mese.</p>
-          <p>Per viaggiare in sicurezza ed evitare sanzioni, ti consigliamo di prenotare un appuntamento.</p>
-          <br />
-          <a href="http://localhost:3000/contatti" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-            Prenota Ora
-          </a>
-          <br /><br />
-          <p style="font-size: 12px; color: #666;">
-            A presto,<br/>
-            Lo Staff di OfficinaPro
+        <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #f97316;">OfficinaPro Reminder</h2>
+          <p>Ciao <strong>${vehicle.customer.firstName}</strong>,</p>
+          <p>Dai nostri registri risulta che la tua <strong>${vehicle.model}</strong> (Targa: ${vehicle.plate}) ha la <strong>${tipoScadenza}</strong> in scadenza il prossimo mese.</p>
+          
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0;">📅 Consigliamo di prenotare entro: <strong>${new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('it-IT')}</strong></p>
+          </div>
+
+          <p>Per viaggiare in sicurezza, prenota subito un appuntamento.</p>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/contatti" 
+               style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+              Prenota Appuntamento
+            </a>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid #eee; margin-top: 40px;" />
+          <p style="font-size: 12px; color: #666; text-align: center;">
+            OfficinaPro - Via dei Meccanici 12, Milano<br/>
+            Se hai già provveduto, ignora questa email.
           </p>
         </div>
       `;
 
       if (resend) {
         await resend.emails.send({
-          from: 'OfficinaPro <onboarding@resend.dev>', // Sender di test
+          from: 'OfficinaPro <reminders@tuodominio.com>', // Aggiorna con il tuo dominio verificato su Resend
           to: vehicle.customer.email,
           subject: emailSubject,
           html: emailBody,
         });
-        console.log(`✅ EMAIL SENT via Resend to ${vehicle.customer.email} (${vehicle.plate})`);
+        console.log(`✅ EMAIL SENT via Resend to ${vehicle.customer.email}`);
       } else {
-        console.log(`[SIMULAZIONE] 📧 Email a ${vehicle.customer.email}: "${emailSubject}"`);
+        console.log(`[SIMULAZIONE] 📧 Email a ${vehicle.customer.email} per ${vehicle.plate}`);
       }
       
       emailsSent++;
@@ -115,6 +139,6 @@ export async function GET() {
 
   } catch (error) {
     console.error("Cron Error:", error);
-    return NextResponse.json({ success: false, error: "Errore interno" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Errore interno server" }, { status: 500 });
   }
 }

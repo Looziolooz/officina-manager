@@ -19,10 +19,30 @@ export const NAV_LINKS = [
 ];
 
 // Definiamo qui gli stati per poterli importare ovunque senza errori "use server"
+// src/lib/constants.ts
+
+// src/lib/constants.ts
+
 export const JOB_STATUS = {
-  PENDING: "PENDING",
-  IN_PROGRESS: "IN_PROGRESS",
-  WAITING_PARTS: "WAITING_PARTS",
-  COMPLETED: "COMPLETED",
-  DELIVERED: "DELIVERED"
+  SCHEDULED: "SCHEDULATO",       
+  IN_PROGRESS: "IN_LAVORAZIONE", 
+  WAITING_PARTS: "ATTESA_RICAMBI", 
+  COMPLETED: "COMPLETATO",       // Lavoro finito in officina
+  DELIVERED: "CONSEGNATO"        // Auto ritirata dal cliente (Archiviato)
+} as const;
+
+export const STATUS_LABELS = {
+  [JOB_STATUS.SCHEDULED]: "In Coda",
+  [JOB_STATUS.IN_PROGRESS]: "In Lavorazione",
+  [JOB_STATUS.WAITING_PARTS]: "Attesa Ricambi",
+  [JOB_STATUS.COMPLETED]: "Pronto",
+  [JOB_STATUS.DELIVERED]: "Consegnato"
+};
+
+export const JOB_STATUS_COLORS = {
+  [JOB_STATUS.SCHEDULED]: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  [JOB_STATUS.IN_PROGRESS]: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  [JOB_STATUS.WAITING_PARTS]: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  [JOB_STATUS.COMPLETED]: "bg-green-500/10 text-green-400 border-green-500/20",
+  [JOB_STATUS.DELIVERED]: "bg-slate-800 text-slate-500 border-slate-800",
 };

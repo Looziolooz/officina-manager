@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+// 
 
 generator client {
   provider = "prisma-client-js"
@@ -21,18 +21,18 @@ model User {
 
 // --- CRM (Clienti) ---
 model Customer {
-  id              String    @id @default(uuid())
-  firstName       String
-  lastName        String
-  email           String?   @unique
-  phone           String    @unique
+  id             String    @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String?   @unique
+  phone          String    @unique
   consentMarketing Boolean  @default(true)
   
-  notes           String?   // <--- QUESTA RIGA È FONDAMENTALE
+  notes          String?
   
-  vehicles        Vehicle[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  vehicles       Vehicle[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // --- VEICOLI ---
@@ -43,11 +43,12 @@ model Vehicle {
   chassisNumber   String?
   registrationDate DateTime?
   
-  kmCount         Int       @default(0) // [!code ++] Campo aggiunto per correggere l'errore
+  kmCount         Int       @default(0)
 
   // Campi per automazione scadenze
   lastRevisionDate DateTime?
   lastOilChange    DateTime?
+  
   customerId      String
   customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
@@ -61,21 +62,52 @@ model Job {
   
   vehicleId   String
   vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
-  
-  // FIX: Usiamo String invece di Enum per compatibilità SQLite
-  status      String    @default("PENDING") 
+ 
+  // STATI: "SCHEDULATO", "IN_LAVORAZIONE", "ATTESA_RICAMBI", "COMPLETATO", "CONSEGNATO"
+  status      String    @default("SCHEDULATO") 
   description String
-  
+  internalNotes String? // Note interne per i meccanici
+
+  // Costi e preventivi
   laborCost   Float     @default(0)
   partsCost   Float     @default(0)
   totalCost   Float     @default(0)
   
-  kmCount     Int
+  kmCount     Int // Km registrati all'ingresso
   
   items       JobItem[]
+
+  // Workflow temporale
+  scheduledDate DateTime? // <--- QUESTO È IL CAMPO CHE MANCAVA
+  startDate     DateTime? // Data inizio lavori effettivi
+  endDate       DateTime? // Data fine lavori
   
-  startDate   DateTime  @default(now())
-  endDate     DateTime?
+  // Collegamento alla fattura (1 Job può avere 1 Fattura)
+  invoice     Invoice?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// --- CONTABILITÀ (Nuovo Modello) ---
+model Invoice {
+  id          String    @id @default(uuid())
+  number      Int       // Numero progressivo annuale (es. 1, 2, 3...)
+  year        Int       // Anno di riferimento (es. 2024)
+  
+  jobId       String    @unique
+  job         Job       @relation(fields: [jobId], references: [id])
+  
+  amount      Float     // Imponibile
+  taxRate     Float     @default(22.0) // IVA
+  totalAmount Float     // Totale
+  
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  
+  issuedAt    DateTime  @default(now())
+
+  @@unique([year, number])
 }
 
 // --- MAGAZZINO ---
