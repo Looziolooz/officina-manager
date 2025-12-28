@@ -1,110 +1,187 @@
 import { prisma } from "@/lib/prisma";
-import { Mail, Search, History, Users, Link } from "lucide-react";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { 
+  Phone, Mail, ArrowLeft, History, Save, FileText, Car, TrendingUp 
+} from "lucide-react"; 
+import { updateCustomerNotes } from "@/app/actions/workshop";
 
-export default async function ClientiPage() {
-  // Recupera clienti con i loro veicoli
-  const customers = await prisma.customer.findMany({
-    include: { vehicles: true },
-    orderBy: { createdAt: 'desc' }
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function ProfiloClientePage({ params }: PageProps) {
+  // 1. Risoluzione della Promise params
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
+
+  // Protezione contro ID undefined prima della chiamata Prisma
+  if (!id) {
+    console.error("ID cliente mancante nei parametri della pagina");
+    notFound();
+  }
+
+  // 2. Recupero dati cliente con relazioni complete
+  const customer = await prisma.customer.findUnique({
+    where: { id: id },
+    include: {
+      vehicles: {
+        include: {
+          jobs: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              items: { include: { part: true } }
+            }
+          }
+        }
+      },
+      accountingRecords: {
+        orderBy: { createdAt: 'desc' }
+      }
+    }
   });
 
+  if (!customer) notFound();
+
+  // 3. Calcolo statistiche e consolidamento dati
+  const allJobs = customer.vehicles.flatMap(v => 
+    v.jobs.map(j => ({ 
+      ...j, 
+      vehiclePlate: v.plate, 
+      vehicleModel: v.model 
+    }))
+  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const totaleFatturato = customer.accountingRecords.reduce((acc, r) => acc + r.amount, 0);
+  const totaleMargine = customer.accountingRecords.reduce((acc, r) => acc + r.margin, 0);
+
   return (
-    <div className="space-y-8">
-      
-      {/* HEADER & AZIONI */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Users className="text-orange-500 w-8 h-8" />
-            Gestione Clienti (CRM)
-          </h1>
-          <p className="text-slate-400">Database clienti e storico interventi.</p>
-        </div>
-        
-        {/* Bottone Test Automazione */}
-        <form action="/api/cron/reminders" method="GET" target="_blank">
-          <button className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg border border-slate-700 flex items-center gap-2 transition-colors">
-            <Mail className="w-4 h-4 text-orange-500" />
-            Test Invio Avvisi
-          </button>
-        </form>
-      </div>
-
-      {/* STATISTICHE VELOCI */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-          <h3 className="text-slate-400 text-sm">Totale Clienti</h3>
-          <p className="text-3xl font-bold text-white mt-2">{customers.length}</p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-          <h3 className="text-slate-400 text-sm">Email Marketing</h3>
-          <p className="text-3xl font-bold text-green-400 mt-2">
-            {customers.filter(c => c.email && !c.email.includes("no-mail")).length} <span className="text-sm font-normal text-slate-500">iscritti</span>
-          </p>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-          <h3 className="text-slate-400 text-sm">Veicoli Gestiti</h3>
-          <p className="text-3xl font-bold text-blue-400 mt-2">
-            {customers.reduce((acc, c) => acc + c.vehicles.length, 0)}
-          </p>
+    <div className="space-y-8 pb-10 bg-black min-h-screen p-6 text-white">
+      {/* INTESTAZIONE */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/clienti" className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-slate-400" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black uppercase tracking-tighter text-white">
+              {customer.firstName} {customer.lastName}
+            </h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">
+              Registrato il {new Date(customer.createdAt).toLocaleDateString('it-IT')}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* LISTA CLIENTI */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-slate-800 flex gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-3 text-slate-500 w-4 h-4" />
-            <input 
-              placeholder="Cerca per nome, targa o telefono..." 
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-white outline-none focus:border-orange-500"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* COLONNA INFO E NOTE */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+            <h3 className="font-black text-slate-500 mb-6 uppercase text-[10px] tracking-widest">Recapiti Cliente</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-slate-300 p-4 bg-black rounded-2xl border border-slate-800">
+                <Phone className="w-4 h-4 text-blue-500" />
+                <span className="font-mono text-sm">{customer.phone}</span>
+              </div>
+              <div className="flex items-center gap-3 text-slate-300 p-4 bg-black rounded-2xl border border-slate-800">
+                <Mail className="w-4 h-4 text-purple-500" />
+                <span className="truncate text-sm">{customer.email || "Email non fornita"}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="w-5 h-5 text-orange-500" />
+              <h3 className="font-black text-white uppercase text-xs tracking-tight">Note Officina</h3>
+            </div>
+            <form action={async (formData) => {
+              "use server";
+              const notes = formData.get("notes") as string;
+              await updateCustomerNotes(id, customer.familyNotes || "", notes);
+            }}>
+              <textarea 
+                name="notes"
+                defaultValue={customer.notes || ""}
+                placeholder="Note tecniche, preferenze o scadenze..."
+                className="w-full h-32 bg-black border border-slate-700 rounded-2xl p-4 text-sm text-slate-300 focus:border-orange-500 outline-none resize-none mb-3 transition-all"
+              />
+              <button className="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-2xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all">
+                <Save className="w-4 h-4" /> Salva Note Cliente
+              </button>
+            </form>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-400">
-            <thead className="bg-slate-950 text-slate-200 uppercase font-medium">
-              <tr>
-                <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Contatti</th>
-                <th className="px-6 py-4">Veicoli</th>
-                <th className="px-6 py-4 text-right">Azioni</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-white">
-                    {/* AGGIUNGIAMO IL LINK QUI SOTTO */}
-                    <Link href={`/admin/clienti/${c.id}`} className="hover:text-orange-500 hover:underline decoration-orange-500 underline-offset-4">
-                      {c.firstName} {c.lastName}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span>{c.phone}</span>
-                      <span className="text-xs text-slate-500">{c.email}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {c.vehicles.map(v => (
-                        <span key={v.id} className="bg-slate-800 px-2 py-1 rounded border border-slate-700 text-xs font-mono text-orange-400">
-                          {v.plate}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-blue-400 hover:text-blue-300 flex items-center gap-1 justify-end ml-auto">
-                      <History className="w-4 h-4" /> Storico
-                    </button>
-                  </td>
-                </tr>
+        {/* COLONNA STATISTICHE E STORICO */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* KPI PERFORMANCE */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+              <p className="text-[10px] uppercase font-black text-slate-500 mb-1 tracking-widest">Fatturato Totale</p>
+              <p className="text-3xl font-black text-white tracking-tighter">€ {totaleFatturato.toFixed(2)}</p>
+            </div>
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+              <p className="text-[10px] uppercase font-black text-slate-500 mb-1 tracking-widest">Margine Netto Ricambi</p>
+              <p className="text-3xl font-black text-green-500 tracking-tighter">€ {totaleMargine.toFixed(2)}</p>
+            </div>
+          </div>
+
+          {/* VEICOLI */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+            <h3 className="font-black text-white uppercase text-xs tracking-widest mb-4 flex items-center gap-2">
+              <Car className="w-4 h-4 text-slate-400" /> Parco Auto Associato
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {customer.vehicles.map(v => (
+                <div key={v.id} className="p-4 bg-black border border-slate-800 rounded-2xl flex justify-between items-center group hover:border-blue-500/50 transition-all">
+                  <div>
+                    <p className="text-blue-500 font-black font-mono tracking-tighter text-lg">{v.plate}</p>
+                    <p className="text-white font-bold text-xs uppercase">{v.model}</p>
+                  </div>
+                  <div className="text-right text-[10px] text-slate-500 font-black uppercase italic">
+                    {v.kmCount} KM
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* CRONOLOGIA INTERVENTI */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-slate-800 flex items-center gap-2 bg-slate-950">
+              <History className="w-5 h-5 text-slate-400" />
+              <h3 className="font-black text-white uppercase text-[10px] tracking-widest">Storico Interventi Archiviati</h3>
+            </div>
+            <div className="divide-y divide-slate-800">
+              {allJobs.map((job) => (
+                <div key={job.id} className="p-6 hover:bg-slate-800/30 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-orange-500 font-mono font-black text-sm uppercase">{job.vehiclePlate}</span>
+                        <span className="text-slate-700">/</span>
+                        <span className="text-slate-400 font-bold text-[10px] uppercase">{new Date(job.createdAt).toLocaleDateString('it-IT')}</span>
+                      </div>
+                      <p className="text-white font-medium uppercase text-xs leading-relaxed max-w-md">{job.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-black text-white tracking-tighter">€ {job.totalCost?.toFixed(2)}</p>
+                      <div className="flex items-center justify-end gap-1 text-[9px] font-black text-green-500 uppercase mt-1 tracking-tighter">
+                        <TrendingUp className="w-2 h-2" /> Utile: € {(job.totalCost - job.partsCost).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {allJobs.length === 0 && (
+                <div className="p-12 text-center text-slate-600 font-black uppercase text-[10px] italic">
+                  Nessun intervento registrato per questo profilo.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

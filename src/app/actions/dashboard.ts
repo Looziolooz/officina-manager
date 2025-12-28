@@ -1,90 +1,100 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { JOB_STATUS } from "@/lib/constants";
 
 export async function getDashboardStats() {
   try {
     const now = new Date();
+    // Inizio e fine mese corrente per i KPI
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // 1. FATTURATO MESE CORRENTE (Solo lavori completati/consegnati)
-    const revenueAgg = await prisma.job.aggregate({
+    // 1. FATTURATO E MARGINE MESE CORRENTE (Dalla tabella Contabilità)
+    const accountingAgg = await prisma.accountingRecord.aggregate({
       where: {
-        status: { in: [JOB_STATUS.COMPLETED, JOB_STATUS.DELIVERED] },
-        endDate: {
+        type: "ENTRATA",
+        createdAt: {
           gte: startOfMonth,
           lte: endOfMonth
         }
       },
-      _sum: { totalCost: true }
+      _sum: { 
+        amount: true,
+        margin: true 
+      }
     });
-    const monthlyRevenue = revenueAgg._sum.totalCost || 0;
 
-    // 2. AUTO IN OFFICINA (Escludiamo schedulati futuri e consegnati)
+    // 2. AUTO ATTUALMENTE IN OFFICINA (Esclusi ARCHIVIATI e SCHEDULATI)
     const carsInWorkshop = await prisma.job.count({
       where: {
-        status: { in: [JOB_STATUS.IN_PROGRESS, JOB_STATUS.WAITING_PARTS] }
+        status: { in: ["IN_LAVORAZIONE", "ATTESA_RICAMBI"] }
       }
     });
 
-    // 3. SCORTE IN ESAURIMENTO (Magazzino)
-    // Nota: Prisma non supporta confronto tra colonne (stock <= threshold) direttamente in modo semplice su tutti i DB,
-    // ma possiamo filtrare quelli con stock basso fisso o usare raw query. 
-    // Per semplicità e sicurezza su SQLite/Postgres standard:
-    const lowStockParts = await prisma.part.count({
-      where: {
-        stockQuantity: { lte: 5 } // Soglia fissa o recupera tutti e filtra in JS se serve soglia dinamica
-      }
+    // 3. SCORTE SOTTO SOGLIA (Magazzino)
+    // Recuperiamo i pezzi dove lo stock è minore o uguale alla soglia minima impostata
+    const parts = await prisma.part.findMany({
+      select: { stockQuantity: true, minThreshold: true }
     });
+    const lowStockParts = parts.filter(p => p.stockQuantity <= p.minThreshold).length;
 
-    // 4. LAVORI COMPLETATI (Mese corrente)
-    const completedJobsCount = await prisma.job.count({
-      where: {
-        status: { in: [JOB_STATUS.COMPLETED, JOB_STATUS.DELIVERED] },
-        endDate: { gte: startOfMonth }
-      }
+    // 4. VALORE TOTALE MAGAZZINO (Asset corrente)
+    const allParts = await prisma.part.findMany({
+      select: { stockQuantity: true, sellPrice: true }
     });
+    const inventoryValue = allParts.reduce((acc, p) => acc + (p.stockQuantity * p.sellPrice), 0);
 
-    // 5. DATI GRAFICO (Ultimi 7 giorni)
+    // 5. DATI GRAFICO (Ultimi 7 giorni: Fatturato vs Margine)
     const chartData = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const startOfDay = new Date(d.setHours(0,0,0,0));
-      const endOfDay = new Date(d.setHours(23,59,59,999));
+      const startOfDay = new Date(d.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(d.setHours(23, 59, 59, 999));
 
-      const dayRevenue = await prisma.job.aggregate({
+      const dayStats = await prisma.accountingRecord.aggregate({
         where: {
-          status: { in: [JOB_STATUS.COMPLETED, JOB_STATUS.DELIVERED] },
-          endDate: { gte: startOfDay, lte: endOfDay }
+          type: "ENTRATA",
+          createdAt: { gte: startOfDay, lte: endOfDay }
         },
-        _sum: { totalCost: true }
+        _sum: { amount: true, margin: true }
       });
 
-      // Nome giorno in Italiano (es: "Lun")
       const dayName = startOfDay.toLocaleDateString('it-IT', { weekday: 'short' });
       
       chartData.push({
-        name: dayName.charAt(0).toUpperCase() + dayName.slice(1), // Capitalizza (lun -> Lun)
-        fatturato: dayRevenue._sum.totalCost || 0
+        name: dayName.charAt(0).toUpperCase() + dayName.slice(1),
+        fatturato: dayStats._sum.amount || 0,
+        margine: dayStats._sum.margin || 0
       });
     }
+
+    // 6. TOP 5 PRODOTTI PIÙ VENDUTI (Dall'archiviazione lavori)
+    const topParts = await prisma.jobItem.groupBy({
+      by: ['description'],
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: 5
+    });
 
     return {
       success: true,
       data: {
-        monthlyRevenue,
+        monthlyRevenue: accountingAgg._sum.amount || 0,
+        monthlyMargin: accountingAgg._sum.margin || 0,
         carsInWorkshop,
         lowStockParts,
-        completedJobsCount,
-        chartData
+        inventoryValue,
+        chartData,
+        topParts: topParts.map(p => ({
+          name: p.description,
+          qty: p._sum.quantity
+        }))
       }
     };
 
   } catch (error) {
-    console.error("Errore Dashboard:", error);
+    console.error("Errore Dashboard Avanzata:", error);
     return { success: false, error: "Impossibile recuperare statistiche" };
   }
 }

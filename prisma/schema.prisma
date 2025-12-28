@@ -19,20 +19,19 @@ model User {
 
 // --- CRM (Clienti) ---
 model Customer {
-  id               String    @id @default(uuid())
-  firstName        String
-  lastName         String
-  // Rimosso @unique dall'email per evitare blocchi se più clienti non la forniscono
-  // Il telefono resta l'unico identificativo univoco
-  email            String?   
-  phone            String    @unique
-  consentMarketing Boolean   @default(true)
-  familyNotes      String?   
-  notes            String?
+  id                String             @id @default(uuid())
+  firstName         String
+  lastName          String
+  email             String?
+  phone             String             @unique
+  consentMarketing  Boolean            @default(true)
+  familyNotes       String?
+  notes             String?
   
-  vehicles         Vehicle[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  vehicles          Vehicle[]
+  accountingRecords AccountingRecord[] // Collegamento con la contabilità
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 // --- VEICOLI ---
@@ -54,29 +53,29 @@ model Vehicle {
   jobs              Job[]
   createdAt         DateTime  @default(now())
 
-  // Indice per velocizzare la ricerca rapida per targa
   @@index([plate])
 }
 
 // --- OFFICINA ---
 model Job {
-  id            String    @id @default(uuid())
-  vehicleId     String
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
-  status        String    @default("SCHEDULATO") 
-  description   String
-  internalNotes String?   
-  laborCost     Float     @default(0)
-  partsCost     Float     @default(0)
-  totalCost     Float     @default(0)
-  kmCount       Int       
-  items         JobItem[]
-  scheduledDate DateTime?
-  startDate     DateTime? 
-  endDate       DateTime? 
-  invoice       Invoice?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String            @id @default(uuid())
+  vehicleId        String
+  vehicle          Vehicle           @relation(fields: [vehicleId], references: [id])
+  status           String            @default("SCHEDULATO") 
+  description      String
+  internalNotes    String?   
+  laborCost        Float             @default(0)
+  partsCost        Float             @default(0)
+  totalCost        Float             @default(0)
+  kmCount          Int       
+  items            JobItem[]
+  scheduledDate    DateTime?
+  startDate        DateTime? 
+  endDate          DateTime? 
+  invoice          Invoice?
+  accountingRecord AccountingRecord? // Collegamento con la contabilità
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 // --- VOCI DI SPESA ---
@@ -92,7 +91,26 @@ model JobItem {
   unitCost    Float   @default(0)
 }
 
-// --- CONTABILITÀ ---
+// --- CONTABILITÀ AVANZATA (Nuovo) ---
+model AccountingRecord {
+  id          String   @id @default(uuid())
+  amount      Float    // Totale incassato (IVA incl.)
+  margin      Float    // Guadagno effettivo (Totale - Costo Ricambi)
+  type        String   // "ENTRATA" o "USCITA"
+  category    String   // "OFFICINA", "MAGAZZINO", "ALTRO"
+  description String?
+  createdAt   DateTime @default(now())
+  
+  // Relazione con il lavoro in officina
+  jobId       String?  @unique
+  job         Job?     @relation(fields: [jobId], references: [id])
+  
+  // Relazione con il cliente
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+}
+
+// --- SPESE AZIENDALI (Generiche) ---
 model BusinessExpense {
   id          String   @id @default(uuid())
   date        DateTime @default(now())

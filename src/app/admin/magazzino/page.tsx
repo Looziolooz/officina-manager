@@ -1,7 +1,7 @@
 import { getParts, addPart, deletePart } from "@/app/actions/inventory";
-import { AlertTriangle, Package, Plus, Search, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2 } from "lucide-react";
 
-// Definiamo il tipo per il Pezzo (Part) per aiutare TypeScript
+// Definiamo il tipo per il Pezzo (Part)
 type Part = {
   id: string;
   code: string;
@@ -13,28 +13,22 @@ type Part = {
 
 export default async function MagazzinoPage() {
   const result = await getParts();
-  // Se c'è un errore o i dati sono nulli, usiamo un array vuoto
   const parts: Part[] = result.success && result.data ? (result.data as Part[]) : [];
 
   return (
     <div className="space-y-6">
-      
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Package className="text-orange-500" />
-            Magazzino Ricambi
+            <Package className="text-orange-500" /> Magazzino Ricambi
           </h1>
           <p className="text-slate-400">Gestisci lo stock e i prezzi dei componenti.</p>
         </div>
         
-        {/* Statistiche Rapide */}
         <div className="flex gap-4">
           <div className="bg-slate-900 p-4 rounded-xl border border-slate-800">
             <p className="text-xs text-slate-500">Valore Totale</p>
             <p className="text-xl font-bold text-white">
-              {/* Qui abbiamo tipizzato 'acc' e 'p' */}
               € {parts.reduce((acc: number, p: Part) => acc + (p.sellPrice * p.stockQuantity), 0).toLocaleString()}
             </p>
           </div>
@@ -42,18 +36,7 @@ export default async function MagazzinoPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* COLONNA SINISTRA: Lista Prodotti */}
         <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <div className="p-4 border-b border-slate-800 flex gap-2">
-            <Search className="text-slate-500" />
-            <input 
-              type="text" 
-              placeholder="Cerca per codice o nome..." 
-              className="bg-transparent border-none focus:ring-0 text-white w-full outline-none" 
-            />
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-slate-400">
               <thead className="bg-slate-950 text-slate-200 uppercase font-medium">
@@ -82,12 +65,12 @@ export default async function MagazzinoPage() {
                       </td>
                       <td className="px-6 py-4 text-white">€ {part.sellPrice.toFixed(2)}</td>
                       <td className="px-6 py-4 text-right">
-                        {/* Wrapper client-side per gestire l'azione */}
+                        {/* Risoluzione errore tipi action */}
                         <form action={async () => {
                           "use server";
                           await deletePart(part.id);
                         }}>
-                          <button className="text-slate-500 hover:text-red-500 transition-colors p-2">
+                          <button type="submit" className="text-slate-500 hover:text-red-500 transition-colors p-2">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </form>
@@ -95,26 +78,18 @@ export default async function MagazzinoPage() {
                     </tr>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                      Magazzino vuoto. Aggiungi il primo prodotto a destra.
-                    </td>
-                  </tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center">Magazzino vuoto.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* COLONNA DESTRA: Form Aggiunta */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 h-fit">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-orange-500" />
-            Nuovo Articolo
+            <Plus className="w-5 h-5 text-orange-500" /> Nuovo Articolo
           </h3>
-          
-          {/* L'azione 'addPart' ora restituisce il tipo corretto per 'action' */}
-          <form action={async (formData) => {
+          <form action={async (formData: FormData) => {
               "use server";
               await addPart(formData);
             }} 
@@ -122,41 +97,21 @@ export default async function MagazzinoPage() {
           >
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Codice Pezzo</label>
-              <input name="code" required type="text" placeholder="Es. OLIO-5W30" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none transition-colors" />
+              <input name="code" required type="text" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none" />
             </div>
-
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Nome Prodotto</label>
-              <input name="name" required type="text" placeholder="Es. Olio Castrol Edge" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none transition-colors" />
+              <input name="name" required type="text" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none" />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Quantità</label>
-                <input name="quantity" required type="number" defaultValue="10" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Prezzo (€)</label>
-                <input name="price" required type="number" step="0.01" placeholder="0.00" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-orange-500 outline-none" />
-              </div>
+              <input name="quantity" required type="number" placeholder="Qtà" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white" />
+              <input name="price" required type="number" step="0.01" placeholder="Prezzo" className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white" />
             </div>
-            
-            <div className="pt-2">
-              <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-orange-900/20 active:scale-95">
-                Aggiungi al Magazzino
-              </button>
-            </div>
+            <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg">
+              Aggiungi al Magazzino
+            </button>
           </form>
-
-          <div className="mt-6 bg-orange-500/10 p-4 rounded-lg border border-orange-500/20 flex gap-3 items-start">
-            <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
-            <p className="text-xs text-orange-200">
-              {/* Corrette le virgolette interne usando &quot; */}
-              I prodotti con quantità inferiore a 5 verranno segnalati automaticamente in Dashboard come &quot;In Esaurimento&quot;.
-            </p>
-          </div>
         </div>
-
       </div>
     </div>
   );
