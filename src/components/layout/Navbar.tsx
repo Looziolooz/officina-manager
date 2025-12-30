@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Settings } from "lucide-react";
-import { SITE_DATA } from "@/constants";
+import { Menu, X, Settings, UserLock } from "lucide-react";
+// Rimosso l'import inutilizzato di SITE_DATA per risolvere l'errore ESLint
+import Link from "next/link";
 
 const navLinks = [
-  { name: "Home", href: "#" },
+  { name: "Home", href: "/" },
   { name: "Chi Siamo", href: "#chi-siamo" },
-  { name: "Servizi", href: "#servizi" }, 
+  { name: "Servizi", href: "#servizi" },
   { name: "Dove Siamo", href: "#contatti" },
 ];
 
@@ -17,25 +18,41 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-background/80 backdrop-blur-md">
       <div className="container flex justify-between items-center h-20">
-        {/* LOGO */}
-        <div className="flex items-center gap-2">
-          <Settings className="text-primary w-8 h-8" />
+        <Link href="/" className="flex items-center gap-2 group">
+          <Settings className="text-primary w-8 h-8 group-hover:rotate-90 transition-transform duration-500" />
           <span className="font-bold text-xl tracking-tighter text-white">
             GT <span className="text-primary">SERVICE</span>
           </span>
-        </div>
+        </Link>
 
         {/* DESKTOP NAV */}
-        <div className="hidden md:flex gap-8">
+        <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a key={link.name} href={link.href} className="text-gray-400 hover:text-primary transition-colors font-medium">
+            <a 
+              key={link.name} 
+              href={link.href} 
+              className="text-gray-400 hover:text-primary transition-colors font-medium text-xs uppercase tracking-widest"
+            >
               {link.name}
             </a>
           ))}
+          
+          {/* Tasto Login Discreto per Giovanni */}
+          <Link 
+            href="/auth/login" 
+            className="p-2 text-gray-500 hover:text-white border border-white/5 hover:border-white/10 hover:bg-white/5 rounded-lg transition-all"
+            title="Area Riservata Gestionale"
+          >
+            <UserLock size={20} />
+          </Link>
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white p-2">
+        <button 
+          onClick={() => setIsOpen(!isOpen)} 
+          className="md:hidden text-white p-2 hover:bg-white/5 rounded-lg"
+          aria-label="Toggle Menu"
+        >
           {isOpen ? <X /> : <Menu />}
         </button>
       </div>
@@ -54,15 +71,19 @@ export default function Navbar() {
                 <a 
                   key={link.name} 
                   href={link.href} 
-                  onClick={() => setIsOpen(false)}
-                  className="text-xl text-gray-300 font-semibold"
+                  onClick={() => setIsOpen(false)} 
+                  className="text-lg text-gray-300 font-semibold hover:text-primary transition-colors"
                 >
                   {link.name}
                 </a>
               ))}
-              <a href={`tel:${SITE_DATA.phone}`} className="bg-primary text-white text-center py-4 rounded-xl font-bold mt-4">
-                Chiama Ora
-              </a>
+              <Link 
+                href="/auth/login" 
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 text-gray-400 py-4 border-t border-white/5 mt-2 hover:text-white"
+              >
+                <UserLock size={18} /> Accesso Gestionale
+              </Link>
             </div>
           </motion.div>
         )}
