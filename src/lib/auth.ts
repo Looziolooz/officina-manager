@@ -36,12 +36,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // 2. Verifica Password con Bcrypt
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
+       const isPasswordValid = await bcrypt.compare(credentials.password as string, user.password);
 
-        if (!isValid) {
+        if (!isPasswordValid) {
           // Incremento tentativi falliti e eventuale blocco
           const currentAttempts = user.failedAttempts + 1;
           const isLockout = currentAttempts >= 5;
