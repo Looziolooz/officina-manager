@@ -1,0 +1,102 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql" // O "mysql" / "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-node"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  MECHANIC
+  RECEPTIONIST
+  VIEWER
+}
+
+enum LoyaltyLevel {
+  PLATINUM
+  GOLD
+  SILVER
+  NONE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          Role      @default(MECHANIC)
+  twoFactorEnabled Boolean @default(false)
+  failedAttempts Int      @default(0)
+  lockoutUntil  DateTime?
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime  @default(now())
+}
+
+model Customer {
+  id            String    @id @default(cuid())
+  firstName     String
+  lastName      String
+  phone         String    @unique
+  email         String?
+  loyaltyLevel  LoyaltyLevel @default(NONE)
+  totalSpent    Float     @default(0)
+  technicalNotes String?  @db.Text
+  familyNotes   String?   @db.Text
+  vehicles      Vehicle[]
+  createdAt     DateTime  @default(now())
+}
+
+model Vehicle {
+  id            String    @id @default(cuid())
+  plate         String    @unique
+  brand         String
+  model         String
+  year          Int
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // Es: "UPDATE_CUSTOMER", "DELETE_VEHICLE"
+  entityId    String?  // ID dell'oggetto modificato
+  details     Json?    // Vecchi/nuovi valori
+  ipAddress   String?
+  timestamp   DateTime @default(now())
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+}
+
+enum JobStatus {
+  ACCETTAZIONE
+  IN_LAVORAZIONE
+  TEST_SU_STRADA
+  PRONTO
+  CONSEGNATO
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      JobStatus @default(ACCETTAZIONE)
+  vehicleId   String
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
