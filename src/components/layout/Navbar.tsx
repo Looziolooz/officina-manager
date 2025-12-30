@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Settings, UserLock } from "lucide-react";
-// Rimosso l'import inutilizzato di SITE_DATA per risolvere l'errore ESLint
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -14,6 +14,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-background/80 backdrop-blur-md">
@@ -28,28 +29,36 @@ export default function Navbar() {
         {/* DESKTOP NAV */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a 
-              key={link.name} 
-              href={link.href} 
+            <Link
+              key={link.name}
+              href={link.href}
               className="text-gray-400 hover:text-primary transition-colors font-medium text-xs uppercase tracking-widest"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
-          
-          {/* Tasto Login Discreto per Giovanni */}
-          <Link 
-            href="/auth/login" 
-            className="p-2 text-gray-500 hover:text-white border border-white/5 hover:border-white/10 hover:bg-white/5 rounded-lg transition-all"
-            title="Area Riservata Gestionale"
-          >
-            <UserLock size={20} />
-          </Link>
+
+          {session ? (
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700 transition-all text-xs uppercase"
+            >
+              <Settings size={16} /> Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="p-2 text-gray-500 hover:text-white border border-white/5 hover:border-white/10 hover:bg-white/5 rounded-lg transition-all"
+              title="Area Riservata"
+            >
+              <UserLock size={20} />
+            </Link>
+          )}
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button 
-          onClick={() => setIsOpen(!isOpen)} 
+        <button
+          onClick={() => setIsOpen(!isOpen)}
           className="md:hidden text-white p-2 hover:bg-white/5 rounded-lg"
           aria-label="Toggle Menu"
         >
@@ -64,25 +73,26 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-background border-b border-white/10 overflow-hidden"
+            className="md:hidden bg-background border-b border-white/10"
           >
             <div className="flex flex-col p-6 gap-4">
               {navLinks.map((link) => (
-                <a 
-                  key={link.name} 
-                  href={link.href} 
-                  onClick={() => setIsOpen(false)} 
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
                   className="text-lg text-gray-300 font-semibold hover:text-primary transition-colors"
                 >
                   {link.name}
-                </a>
+                </Link>
               ))}
-              <Link 
-                href="/auth/login" 
+              <Link
+                href={session ? "/admin/dashboard" : "/auth/login"}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 text-gray-400 py-4 border-t border-white/5 mt-2 hover:text-white"
+                className="flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg font-bold mt-2 hover:bg-orange-700 transition-all"
               >
-                <UserLock size={18} /> Accesso Gestionale
+                <UserLock size={18} />
+                {session ? "Dashboard" : "Area Riservata"}
               </Link>
             </div>
           </motion.div>
