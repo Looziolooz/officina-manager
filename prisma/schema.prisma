@@ -100,3 +100,27 @@ model Job {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+model Part {
+  id          String   @id @default(cuid())
+  code        String   @unique // Codice ricambio (es. 04E115561H)
+  name        String   // Nome (es. Filtro Olio)
+  brand       String?  // Marca (es. Bosch, Mann)
+  price       Float    // Prezzo di vendita
+  stock       Int      @default(0) // Quantità attuale
+  minStock    Int      @default(2) // Soglia per avviso sottoscorta
+  category    String?  // Es. Filtri, Freni, Olio
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  jobs        PartOnJob[]
+}
+
+// Tabella di collegamento per scaricare i ricambi sui lavori
+model PartOnJob {
+  id        String   @id @default(cuid())
+  jobId     String
+  partId    String
+  quantity  Int      @default(1)
+  job       Job      @relation(fields: [jobId], references: [id])
+  part      Part     @relation(fields: [partId], references: [id])
+}

@@ -1,52 +1,64 @@
 "use client";
 import { motion } from "framer-motion";
-import { Clock, Car, CheckCircle2, Wrench, Navigation } from "lucide-react";
+import { Clock, CheckCircle2, Wrench, Navigation, Car } from "lucide-react";
+import QuickInventory from "@/components/admin/QuickInventory";
 
 const columns = [
-  { id: "ACCETTAZIONE", label: "Accettazione", icon: <Clock className="text-blue-500" /> },
-  { id: "IN_LAVORAZIONE", label: "In Lavorazione", icon: <Wrench className="text-orange-500" /> },
-  { id: "TEST_SU_STRADA", label: "Test su Strada", icon: <Navigation className="text-yellow-500" /> },
-  { id: "PRONTO", label: "Pronto / Lavaggio", icon: <CheckCircle2 className="text-green-500" /> },
+  { id: "ACCETTAZIONE", label: "Entrata", icon: <Clock size={16} className="text-blue-500" /> },
+  { id: "IN_LAVORAZIONE", label: "Ponte / Officina", icon: <Wrench size={16} className="text-orange-500" /> },
+  { id: "TEST_SU_STRADA", label: "Collaudo", icon: <Navigation size={16} className="text-yellow-500" /> },
+  { id: "PRONTO", label: "Pronto", icon: <CheckCircle2 size={16} className="text-green-500" /> },
 ];
 
-// Dati fittizi per visualizzazione immediata
+// Esempio dati (verranno poi caricati dal DB con un'action)
 const jobs = [
-  { id: "1", title: "Cambio Cinghia", plate: "AA123BB", model: "Golf 7", status: "IN_LAVORAZIONE" },
-  { id: "2", title: "Diagnosi Spia ABS", plate: "CC444DD", model: "Audi A3", status: "ACCETTAZIONE" },
-  { id: "3", title: "Tagliando", plate: "EE555FF", model: "Fiat 500", status: "PRONTO" },
+  { id: "clmq123", plate: "FS123GT", model: "Jeep Renegade", status: "IN_LAVORAZIONE", owner: "M. Rossi" },
+  { id: "clmq456", plate: "GH456TT", model: "Audi A4", status: "ACCETTAZIONE", owner: "L. Bianchi" },
 ];
 
 export default function KanbanDashboard() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-white mb-8 tracking-tighter">STATO OFFICINA LIVE</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-background p-6">
+      <header className="mb-10">
+        <h1 className="text-3xl font-bold text-white tracking-tighter uppercase">Gestione Flusso Officina</h1>
+        <p className="text-gray-500">Monitoraggio in tempo reale degli interventi e ricambi.</p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
         {columns.map((col) => (
-          <div key={col.id} className="bg-slate-900/50 rounded-2xl border border-white/5 p-4 min-h-[70vh]">
-            <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
+          <div key={col.id} className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 px-2">
               {col.icon}
-              <h2 className="text-white font-bold uppercase text-sm tracking-widest">{col.label}</h2>
-              <span className="ml-auto bg-white/10 text-white text-xs px-2 py-0.5 rounded-full">
+              <h2 className="text-white font-bold text-xs uppercase tracking-widest">{col.label}</h2>
+              <span className="ml-auto text-[10px] bg-white/5 text-gray-500 px-2 py-0.5 rounded-full border border-white/10">
                 {jobs.filter(j => j.status === col.id).length}
               </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="bg-slate-900/30 border border-white/5 rounded-2xl p-3 min-h-[60vh] space-y-4">
               {jobs.filter(j => j.status === col.id).map((job) => (
                 <motion.div
-                  layoutId={job.id}
                   key={job.id}
-                  className="bg-white/5 border border-white/10 p-4 rounded-xl hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing"
+                  layoutId={job.id}
+                  className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-xl hover:bg-white/[0.07] transition-colors"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-[10px] font-mono bg-white text-black px-1.5 rounded font-bold">
-                      {job.plate}
-                    </span>
-                    <Car size={14} className="text-gray-500" />
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <span className="text-[9px] font-mono bg-primary text-white px-1.5 py-0.5 rounded font-bold">
+                        {job.plate}
+                      </span>
+                      <h3 className="text-white font-bold text-sm mt-1">{job.model}</h3>
+                      <p className="text-[10px] text-gray-500">{job.owner}</p>
+                    </div>
+                    <Car size={16} className="text-gray-700" />
                   </div>
-                  <h3 className="text-white font-semibold text-sm">{job.model}</h3>
-                  <p className="text-gray-500 text-xs mt-1">{job.title}</p>
+
+                  {/* POS INTEGRATO SOLO PER AUTO SUL PONTE */}
+                  {col.id === "IN_LAVORAZIONE" && (
+                    <div className="mt-4 border-t border-white/5 pt-4">
+                      <QuickInventory jobId={job.id} />
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>

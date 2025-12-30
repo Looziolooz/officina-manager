@@ -1,62 +1,79 @@
 // src/lib/auth.ts
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/db";
 import bcrypt from "bcrypt";
-import { prisma } from "@/lib/db"; // Dovrai creare questo file export const prisma = new PrismaClient()
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
+  ...authConfig, // Espandiamo la configurazione base (callbacks e provider settings)
   providers: [
-    Credentials({
+    {
+      id: "credentials",
+      name: "Credentials",
+      type: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // Ricerca utente sul DB
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }
+          where: { email: credentials.email as string },
         });
 
-        if (!user) throw new Error("Credenziali non valide.");
-
-        // Controllo Account Lockout
-        if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-          throw new Error("Account bloccato. Riprova tra 30 minuti.");
-        }
-
-        const isValid = await bcrypt.compare(credentials.password as string, user.password);
-
-        if (!isValid) {
-          // Incrementa tentativi falliti
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { 
-              failedAttempts: { increment: 1 },
-              lockoutUntil: user.failedAttempts + 1 >= 5 ? new Date(Date.now() + 30 * 60000) : null
-            }
-          });
+        if (!user || !user.password) {
           throw new Error("Credenziali non valide.");
         }
 
-        // Reset tentativi su login successo
+        // 1. Controllo Account Lockout (Protezione Brute Force)
+        if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+          throw new Error("Account bloccato temporaneamente. Riprova tra 30 minuti.");
+        }
+
+        // 2. Verifica Password con Bcrypt
+        const isValid = await bcrypt.compare(
+          credentials.password as string,
+          user.password
+        );
+
+        if (!isValid) {
+          // Incremento tentativi falliti e eventuale blocco
+          const currentAttempts = user.failedAttempts + 1;
+          const isLockout = currentAttempts >= 5;
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedAttempts: currentAttempts,
+              lockoutUntil: isLockout ? new Date(Date.now() + 30 * 60 * 1000) : null,
+            },
+          });
+
+          throw new Error("Credenziali non valide.");
+        }
+
+        // 3. Login Success: Reset dei contatori di errore
         await prisma.user.update({
           where: { id: user.id },
-          data: { failedAttempts: 0, lockoutUntil: null }
+          data: {
+            failedAttempts: 0,
+            lockoutUntil: null,
+          },
         });
 
-        return { id: user.id, email: user.email, role: user.role };
-      }
-    })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
+        // Restituiamo i dati necessari alla sessione
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
     },
-    async session({ session, token }) {
-      if (token.role && session.user) {
-        session.user.role = token.role;
-      }
-      return session;
-    }
-  }
+  ],
 });

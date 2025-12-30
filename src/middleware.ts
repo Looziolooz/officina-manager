@@ -1,15 +1,9 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./lib/auth.config";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const { nextUrl } = req;
-  const isAdminArea = nextUrl.pathname.startsWith("/admin");
-
-  if (isAdminArea && !isLoggedIn) {
-    return Response.redirect(new URL("/auth/login", nextUrl));
-  }
-});
+export default NextAuth(authConfig).auth;
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  // Proteggiamo le rotte admin e api/admin
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
