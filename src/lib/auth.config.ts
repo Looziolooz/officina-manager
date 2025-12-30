@@ -1,4 +1,3 @@
-// src/lib/auth.config.ts
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
@@ -7,27 +6,28 @@ export const authConfig = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
+      if (user?.role) {
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token.role && session.user) {
+      if (session?.user && token?.role) {
+        // @ts-expect-error - Extended by module declaration
         session.user.role = token.role;
       }
       return session;
     },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isAdminArea = nextUrl.pathname.startsWith("/admin");
-      
-      if (isAdminArea) {
-        if (isLoggedIn) return true;
-        return false; // Redirect al login
+      const isOnAdminArea = nextUrl.pathname.startsWith("/admin");
+
+      if (isOnAdminArea && !isLoggedIn) {
+        return false;
       }
+
       return true;
     },
   },
-  providers: [], // I provider vengono aggiunti in auth.ts
+  providers: [],
 } satisfies NextAuthConfig;

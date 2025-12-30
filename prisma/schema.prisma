@@ -1,9 +1,11 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL") 
 }
 
 enum Role {
@@ -61,7 +63,7 @@ model Vehicle {
   year      Int
   ownerId   String
   owner     Customer @relation(fields: [ownerId], references: [id])
-  jobs      Job[]    // Relazione aggiunta
+  jobs      Job[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -73,7 +75,7 @@ model Job {
   status      JobStatus   @default(ACCETTAZIONE)
   vehicleId   String
   vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
-  parts       PartOnJob[] // Relazione aggiunta
+  parts       PartOnJob[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -86,7 +88,7 @@ model Part {
   price       Float
   stock       Int         @default(0)
   minStock    Int         @default(5)
-  jobs        PartOnJob[] // Relazione aggiunta
+  jobs        PartOnJob[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }

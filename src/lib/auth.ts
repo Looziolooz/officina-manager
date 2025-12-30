@@ -1,10 +1,10 @@
-// src/lib/auth.ts
-import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { authConfig } from "./auth.config";
+import NextAuth from "next-auth"
+import { authConfig } from "./auth.config"
+// ... altri import (prisma, bcrypt, ecc.)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -17,24 +17,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email as string },
         });
 
         if (!user || !user.password) {
-          throw new Error("Credenziali non valide.");
+          return null;
         }
 
-        // Controllo lockout
         if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-          throw new Error("Account bloccato. Riprova tra 30 minuti.");
+          throw new Error("Account bloccato temporaneamente");
         }
 
-        // Verifica password
         const isValid = await bcrypt.compare(
-          credentials.password as string, 
+          credentials.password as string,
           user.password
         );
 
@@ -44,15 +44,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: { id: user.id },
             data: {
               failedAttempts: attempts,
-              lockoutUntil: attempts >= 5 
-                ? new Date(Date.now() + 30 * 60 * 1000) 
-                : null,
+              lockoutUntil:
+                attempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null,
             },
           });
-          throw new Error("Credenziali non valide.");
+          return null;
         }
 
-        // Reset tentativi
         await prisma.user.update({
           where: { id: user.id },
           data: { failedAttempts: 0, lockoutUntil: null },

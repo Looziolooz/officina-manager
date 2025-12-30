@@ -1,9 +1,5 @@
 // prisma.config.ts
 import { defineConfig } from '@prisma/config';
-import * as dotenv from 'dotenv';
-
-// Carica esplicitamente il file .env
-dotenv.config();
 
 export default defineConfig({
   datasource: {
