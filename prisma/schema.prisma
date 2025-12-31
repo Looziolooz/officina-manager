@@ -1,24 +1,16 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
   SUPER_ADMIN
   MECHANIC
   RECEPTIONIST
-}
-
-enum LoyaltyLevel {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
 }
 
 enum JobStatus {
@@ -42,28 +34,35 @@ model User {
 }
 
 model Customer {
-  id           String       @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String?      @unique
-  phone        String
-  address      String?
-  loyaltyLevel LoyaltyLevel @default(BRONZE)
-  points       Int          @default(0)
-  vehicles     Vehicle[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String    @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String?   @unique
+  phone          String    @index // Indice per ricerca rapida
+  address        String?
+  
+  // CRM Avanzato: Note separate
+  technicalNotes String?   @db.Text
+  familyNotes    String?   @db.Text
+  
+  // Relazioni
+  vehicles       Vehicle[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Vehicle {
   id        String   @id @default(cuid())
-  plate     String   @unique
+  plate     String   @unique @index // Indice per ricerca rapida targa
   brand     String
   model     String
   year      Int
+  vin       String?  // Numero telaio opzionale
+  
   ownerId   String
   owner     Customer @relation(fields: [ownerId], references: [id])
   jobs      Job[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -73,9 +72,15 @@ model Job {
   title       String
   description String?
   status      JobStatus   @default(ACCETTAZIONE)
+  
+  // Statistiche e Margini
+  laborCost   Float       @default(0) // Costo manodopera per calcolo margini
+  totalAmount Float       @default(0) // Totale fatturato per questo lavoro
+  
   vehicleId   String
   vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
   parts       PartOnJob[]
+  
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -85,7 +90,11 @@ model Part {
   code        String      @unique
   name        String
   description String?
-  price       Float
+  
+  // Prezzi per gestione margini
+  buyPrice    Float       @default(0) // Prezzo acquisto
+  sellPrice   Float       @default(0) // Prezzo vendita
+  
   stock       Int         @default(0)
   minStock    Int         @default(5)
   jobs        PartOnJob[]
@@ -94,12 +103,16 @@ model Part {
 }
 
 model PartOnJob {
-  id       String @id @default(cuid())
-  jobId    String
-  partId   String
-  quantity Int    @default(1)
-  job      Job    @relation(fields: [jobId], references: [id])
-  part     Part   @relation(fields: [partId], references: [id])
+  id        String   @id @default(cuid())
+  jobId     String
+  partId    String
+  quantity  Int      @default(1)
+  
+  // Prezzo bloccato al momento del lavoro
+  appliedPrice Float @default(0) 
+  
+  job       Job      @relation(fields: [jobId], references: [id])
+  part      Part     @relation(fields: [partId], references: [id])
 
   @@unique([jobId, partId])
 }
