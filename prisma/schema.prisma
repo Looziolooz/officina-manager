@@ -33,8 +33,6 @@ model User {
   updatedAt      DateTime  @updatedAt
 }
 
-// prisma/schema.prisma
-
 model Customer {
   id             String    @id @default(cuid())
   firstName      String
@@ -42,13 +40,16 @@ model Customer {
   email          String?   @unique
   phone          String
   address        String?
+  
+  // Note CRM Avanzato
   technicalNotes String?   @db.Text
   familyNotes    String?   @db.Text
+  
   vehicles       Vehicle[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  @@index([phone]) // <-- Definizione corretta dell'indice
+  @@index([phone]) // Ricerca rapida per numero di telefono
 }
 
 model Vehicle {
@@ -57,14 +58,14 @@ model Vehicle {
   brand     String
   model     String
   year      Int
-  vin       String?
+  vin       String?  // Telaio opzionale
   ownerId   String
   owner     Customer @relation(fields: [ownerId], references: [id])
   jobs      Job[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([plate]) // <-- Definizione corretta dell'indice
+  @@index([plate]) // Ricerca rapida per targa
 }
 
 model Job {
@@ -74,8 +75,8 @@ model Job {
   status      JobStatus   @default(ACCETTAZIONE)
   
   // Statistiche e Margini
-  laborCost   Float       @default(0) // Costo manodopera per calcolo margini
-  totalAmount Float       @default(0) // Totale fatturato per questo lavoro
+  laborCost   Float       @default(0) // Costo manodopera
+  totalAmount Float       @default(0) // Fatturato totale dell'intervento
   
   vehicleId   String
   vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
@@ -91,9 +92,9 @@ model Part {
   name        String
   description String?
   
-  // Prezzi per gestione margini
-  buyPrice    Float       @default(0) // Prezzo acquisto
-  sellPrice   Float       @default(0) // Prezzo vendita
+  // Gestione Margini
+  buyPrice    Float       @default(0) // Prezzo di acquisto per l'officina
+  sellPrice   Float       @default(0) // Prezzo di vendita al cliente
   
   stock       Int         @default(0)
   minStock    Int         @default(5)
@@ -103,16 +104,16 @@ model Part {
 }
 
 model PartOnJob {
-  id        String   @id @default(cuid())
-  jobId     String
-  partId    String
-  quantity  Int      @default(1)
+  id           String   @id @default(cuid())
+  jobId        String
+  partId       String
+  quantity     Int      @default(1)
   
-  // Prezzo bloccato al momento del lavoro
-  appliedPrice Float @default(0) 
+  // Prezzo bloccato al momento dell'intervento per storicizzazione corretta
+  appliedPrice Float    @default(0) 
   
-  job       Job      @relation(fields: [jobId], references: [id])
-  part      Part     @relation(fields: [partId], references: [id])
+  job          Job      @relation(fields: [jobId], references: [id])
+  part         Part     @relation(fields: [partId], references: [id])
 
   @@unique([jobId, partId])
 }

@@ -1,4 +1,6 @@
+// src/app/admin/dashboard/page.tsx
 "use client";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Clock, 
@@ -9,12 +11,23 @@ import {
   MessageCircle,
   TrendingUp,
   Package,
-  CheckSquare
+  CheckSquare,
+  Euro
 } from "lucide-react";
 import QuickInventory from "@/components/admin/QuickInventory";
 import { sendWhatsAppNotification } from "@/app/actions/notifications";
+import { getDashboardStats } from "@/app/actions/dashboard";
 
-// Definizione colonne e stati
+// Interfaccia per la tipizzazione corretta dei lavori
+interface DashboardJob {
+  id: string;
+  plate: string;
+  model: string;
+  status: string;
+  owner: string;
+  phone: string;
+}
+
 const columns = [
   { id: "ACCETTAZIONE", label: "Entrata", icon: <Clock size={16} className="text-blue-500" /> },
   { id: "IN_LAVORAZIONE", label: "Ponte / Officina", icon: <Wrench size={16} className="text-orange-500" /> },
@@ -22,58 +35,69 @@ const columns = [
   { id: "PRONTO", label: "Pronto", icon: <CheckCircle2 size={16} className="text-green-500" /> },
 ];
 
-// Dati mockati (da collegare a database via Server Action in futuro)
-const jobs = [
-  { id: "clmq1", plate: "FS123GT", model: "Jeep Renegade", status: "IN_LAVORAZIONE", owner: "M. Rossi", phone: "3331122334" },
-  { id: "clmq2", plate: "GH456TT", model: "Audi A4", status: "PRONTO", owner: "L. Bianchi", phone: "3409988776" },
-  { id: "clmq3", plate: "BN998RR", model: "Fiat 500", status: "ACCETTAZIONE", owner: "A. Verdi", phone: "3285566443" },
-];
-
-const dailyStats = {
-  revenue: 1250.00,
-  partsUsed: 8,
-  jobsDone: 4
-};
-
 export default function KanbanDashboard() {
+  const [stats, setStats] = useState({ revenue: 0, partsUsed: 0, jobsDone: 0, margin: 0 });
+  // Rimosso setJobs e loading inutilizzati. Inizializzato con array vuoto o dati mockati tipizzati.
+  const [jobs] = useState<DashboardJob[]>([
+    { id: "clmq1", plate: "FS123GT", model: "Jeep Renegade", status: "IN_LAVORAZIONE", owner: "M. Rossi", phone: "3331122334" },
+    { id: "clmq2", plate: "GH456TT", model: "Audi A4", status: "PRONTO", owner: "L. Bianchi", phone: "3409988776" },
+    { id: "clmq3", plate: "BN998RR", model: "Fiat 500", status: "ACCETTAZIONE", owner: "A. Verdi", phone: "3285566443" },
+  ]);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Errore caricamento dati dashboard:", error);
+      }
+    }
+    loadDashboardData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background p-6 lg:p-10">
       <header className="mb-10">
         <h1 className="text-3xl font-bold text-white tracking-tighter uppercase">Gestione Flusso Officina</h1>
-        <p className="text-gray-500">Monitoraggio in tempo reale degli interventi e ricambi.</p>
+        <p className="text-gray-500">Dati reali sincronizzati con Magazzino e Officina.</p>
       </header>
 
-      {/* SEZIONE STATISTICHE GIORNALIERE - VERSIONA CANONICA */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-  {/* Incasso */}
-  <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
-    <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform">
-      <TrendingUp size={80} className="text-green-500" />
-    </div>
-    <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Incasso Oggi</div>
-    <div className="text-3xl font-bold text-green-500">€ {dailyStats.revenue.toFixed(2)}</div>
-  </div>
+      {/* SEZIONE STATISTICHE REALI */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+        <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
+          <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform text-green-500">
+            <TrendingUp size={80} />
+          </div>
+          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Incasso Oggi</div>
+          <div className="text-3xl font-bold text-green-500 font-mono">€ {stats.revenue.toFixed(2)}</div>
+        </div>
 
-  {/* Ricambi */}
-  <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
-    <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform">
-      <Package size={80} className="text-blue-500" />
-    </div>
-    <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Ricambi Scaricati</div>
-    <div className="text-3xl font-bold text-blue-500">{dailyStats.partsUsed} <span className="text-sm">pz</span></div>
-  </div>
+        <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
+          <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform text-blue-500">
+            <Euro size={80} />
+          </div>
+          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Utile Stimato</div>
+          <div className="text-3xl font-bold text-blue-400 font-mono">€ {stats.margin.toFixed(2)}</div>
+        </div>
 
-  {/* Consegnate */}
-  <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
-    <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform">
-      <CheckSquare size={80} className="text-primary" />
-    </div>
-    <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Auto Consegnate</div>
-    <div className="text-3xl font-bold text-primary">{dailyStats.jobsDone}</div>
-  </div>
-</div>
+        <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
+          <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform text-orange-500">
+            <Package size={80} />
+          </div>
+          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Pezzi Scaricati</div>
+          <div className="text-3xl font-bold text-orange-500 font-mono">{stats.partsUsed} <span className="text-sm">pz</span></div>
+        </div>
 
-      {/* KANBAN BOARD */}
+        <div className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-sm relative overflow-hidden group">
+          <div className="absolute -right-2.5 -bottom-2.5 opacity-10 group-hover:scale-110 transition-transform text-primary">
+            <CheckSquare size={80} />
+          </div>
+          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Interventi Finiti</div>
+          <div className="text-3xl font-bold text-primary font-mono">{stats.jobsDone}</div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
         {columns.map((col) => (
           <div key={col.id} className="flex flex-col gap-4">
@@ -103,14 +127,12 @@ export default function KanbanDashboard() {
                     <Car size={16} className="text-gray-700" />
                   </div>
 
-                  {/* POS INTEGRATO PER AUTO SUL PONTE */}
                   {col.id === "IN_LAVORAZIONE" && (
                     <div className="mt-4 border-t border-white/5 pt-4">
                       <QuickInventory jobId={job.id} />
                     </div>
                   )}
 
-                  {/* TASTO WHATSAPP PER AUTO PRONTE */}
                   {col.id === "PRONTO" && (
                     <button 
                       onClick={async () => {

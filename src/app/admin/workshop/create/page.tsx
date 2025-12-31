@@ -1,20 +1,32 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Wrench, Trash2, Save, Euro, TrendingUp, AlertCircle } from "lucide-react";
+import { Wrench, Trash2, Save, Euro, AlertCircle } from "lucide-react"; // Rimosso TrendingUp
 import { createWorkshopJob } from "@/app/actions/workshop";
+
+// Interfaccia dedicata per eliminare l'uso di 'any'
+interface InventoryItem {
+  id: string;
+  code: string;
+  name: string;
+  sellPrice: number;
+  buyPrice: number;
+  stock: number;
+}
 
 export default function CreateJobPage() {
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get("vehicleId");
   const router = useRouter();
 
-  const [inventory, setInventory] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [selectedParts, setSelectedParts] = useState<{partId: string, qty: number}[]>([]);
   const [laborCost, setLaborCost] = useState(0);
   const [title, setTitle] = useState("Manutenzione Ordinaria");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // ... resto della logica del componente
 
   useEffect(() => {
     fetch("/api/inventory").then(res => res.json()).then(setInventory);
