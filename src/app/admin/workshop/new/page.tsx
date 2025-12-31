@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Search, Car, Wrench, User, ArrowRight } from "lucide-react";
+import { Search, Car, Wrench, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface SearchResult {
@@ -14,17 +14,19 @@ interface SearchResult {
 export default function NewJobPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const searchVehicle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setQuery(val);
     if (val.length < 2) return setResults([]);
-    setLoading(true);
-    const res = await fetch(`/api/vehicles/search?q=${val}`);
-    const data = await res.json();
-    setResults(data);
-    setLoading(false);
+    
+    try {
+      const res = await fetch(`/api/vehicles/search?q=${val}`);
+      const data = await res.json();
+      setResults(data);
+    } catch (error) {
+      console.error("Errore ricerca:", error);
+    }
   };
 
   return (

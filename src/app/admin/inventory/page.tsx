@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { Package, AlertTriangle, Plus } from "lucide-react";
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
+
+type PartWithData = Prisma.PartGetPayload<{}>;
 
 export default async function InventoryPage() {
   const parts = await prisma.part.findMany({
@@ -20,30 +23,28 @@ export default async function InventoryPage() {
 
       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-white/5 text-gray-400 text-xs uppercase">
+          <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
             <tr>
               <th className="p-4">Ricambio</th>
               <th className="p-4">Stock</th>
-              <th className="p-4">Prezzo Vendita</th>
-              <th className="p-4">Margine</th>
+              <th className="p-4">Prezzo</th>
+              <th className="p-4 text-right">Margine</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {parts.map((part: any) => {
+            {parts.map((part: PartWithData) => {
               const margin = part.sellPrice - part.buyPrice;
               return (
-                <tr key={part.id} className="hover:bg-white/5">
+                <tr key={part.id} className="hover:bg-white/5 transition-colors">
                   <td className="p-4">
                     <p className="font-bold text-white">{part.code}</p>
-                    <p className="text-sm text-gray-500">{part.name}</p>
+                    <p className="text-xs text-gray-500">{part.name}</p>
                   </td>
-                  <td className={`p-4 font-bold ${part.stock <= part.minStock ? 'text-amber-500' : 'text-green-400'}`}>
-                    <div className="flex items-center gap-2">
-                      {part.stock} {part.stock <= part.minStock && <AlertTriangle size={14} />}
-                    </div>
+                  <td className={`p-4 font-mono ${part.stock <= part.minStock ? 'text-orange-500' : 'text-green-400'}`}>
+                    {part.stock} {part.stock <= part.minStock && <AlertTriangle size={12} className="inline ml-1" />}
                   </td>
                   <td className="p-4 text-white">€ {part.sellPrice.toFixed(2)}</td>
-                  <td className="p-4 text-blue-400">€ {margin.toFixed(2)}</td>
+                  <td className="p-4 text-blue-400 font-bold text-right font-mono">€ {margin.toFixed(2)}</td>
                 </tr>
               );
             })}

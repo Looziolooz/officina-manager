@@ -26,10 +26,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newPart, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("ERRORE MAGAZZINO:", error);
     
-    if (error.code === 'P2002') {
+    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: "Un articolo con questo codice esiste già" },
         { status: 400 }

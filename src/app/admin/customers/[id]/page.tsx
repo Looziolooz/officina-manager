@@ -1,11 +1,5 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { Prisma } from "@prisma/client";
-
-// Tipo complesso per includere lavori e veicoli
-type CustomerFull = Prisma.CustomerGetPayload<{
-  include: { vehicles: { include: { jobs: true } } }
-}>;
 
 export default async function CustomerDetailsPage({
   params,
@@ -18,12 +12,12 @@ export default async function CustomerDetailsPage({
     include: {
       vehicles: { include: { jobs: true } }
     }
-  }) as CustomerFull | null;
+  });
 
   if (!customer) notFound();
 
-  const allJobs = customer.vehicles.flatMap(v => v.jobs);
-  const totalSpent = allJobs.reduce((sum, job) => sum + (job.totalAmount || 0), 0);
+  const allJobs = customer.vehicles.flatMap((v: typeof customer.vehicles[number]) => v.jobs);
+  const totalSpent = allJobs.reduce((sum: number, job: typeof allJobs[number]) => sum + (job.totalAmount || 0), 0);
 
   return (
     <div className="space-y-6 text-white">
@@ -33,13 +27,13 @@ export default async function CustomerDetailsPage({
           <p className="text-gray-400">{customer.phone}</p>
         </div>
         <div className="text-right">
-          <p className="text-sm text-gray-500 uppercase">Fatturato Totale</p>
+          <p className="text-sm text-gray-500 uppercase font-bold">Fatturato Totale</p>
           <p className="text-3xl font-bold text-green-400">€ {totalSpent.toFixed(2)}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {customer.vehicles.map((vehicle) => (
+        {customer.vehicles.map((vehicle: typeof customer.vehicles[number]) => (
           <div key={vehicle.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
             <p className="text-lg font-bold uppercase">{vehicle.plate}</p>
             <p className="text-sm text-gray-400">{vehicle.brand} {vehicle.model}</p>

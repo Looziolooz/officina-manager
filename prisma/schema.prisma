@@ -33,38 +33,38 @@ model User {
   updatedAt      DateTime  @updatedAt
 }
 
+// prisma/schema.prisma
+
 model Customer {
   id             String    @id @default(cuid())
   firstName      String
   lastName       String
   email          String?   @unique
-  phone          String    @index // Indice per ricerca rapida
+  phone          String
   address        String?
-  
-  // CRM Avanzato: Note separate
   technicalNotes String?   @db.Text
   familyNotes    String?   @db.Text
-  
-  // Relazioni
   vehicles       Vehicle[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([phone]) // <-- Definizione corretta dell'indice
 }
 
 model Vehicle {
   id        String   @id @default(cuid())
-  plate     String   @unique @index // Indice per ricerca rapida targa
+  plate     String   @unique
   brand     String
   model     String
   year      Int
-  vin       String?  // Numero telaio opzionale
-  
+  vin       String?
   ownerId   String
   owner     Customer @relation(fields: [ownerId], references: [id])
   jobs      Job[]
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([plate]) // <-- Definizione corretta dell'indice
 }
 
 model Job {
