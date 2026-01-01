@@ -1,39 +1,58 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // o "sqlite" se stai usando quello
   url      = env("DATABASE_URL")
 }
 
+// --- ENUMS ---
+
 enum Role {
   SUPER_ADMIN
+  MANAGER
   MECHANIC
   RECEPTIONIST
 }
 
 enum JobStatus {
-  ACCETTAZIONE
-  IN_LAVORAZIONE
-  TEST_SU_STRADA
-  PRONTO
-  CONSEGNATO
+  SCHEDULED      // Schedulato
+  IN_PROGRESS    // In Lavorazione
+  WAITING_PARTS  // Attesa Ricambi
+  COMPLETED      // Completato
+  DELIVERED      // Consegnato
 }
+
+enum MaintenanceType {
+  OIL_CHANGE
+  BRAKE_SERVICE
+  TIRE_ROTATION
+  GENERAL_INSPECTION
+  ENGINE_REPAIR
+  TRANSMISSION
+  ELECTRICAL
+  BODYWORK
+  OTHER
+}
+
+// --- MODELS ---
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  password       String
-  name           String?
-  role           Role      @default(MECHANIC)
-  failedAttempts Int       @default(0)
-  lockoutUntil   DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String?   // Opzionale se usi auth provider esterni, obbligatorio per credentials
+  role          Role      @default(MECHANIC)
+  
+  assignedJobs  Job[]
+  jobNotes      JobNote[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
-
-// prisma/schema.prisma
 
 model Customer {
   id             String    @id @default(cuid())
@@ -41,15 +60,15 @@ model Customer {
   lastName       String
   email          String?   @unique
   phone          String    @unique
-  alternatePhone String?   // Nuovo
+  alternatePhone String?   // <--- Campo Nuovo CRM
   address        String?
 
-  // CRM Avanzato - Note Separate
-  technicalNotes String?   @db.Text // Visibili solo al meccanico (Box Azzurro)
-  familyNotes    String?   @db.Text // Note personali ufficio (Box Arancione)
+  // CRM Avanzato
+  technicalNotes String?   @db.Text
+  familyNotes    String?   @db.Text
 
-  // Statistiche e Loyalty
-  totalSpent     Float     @default(0) // Aggiornato via trigger o server action
+  // Statistiche e Loyalty (Campi Nuovi)
+  totalSpent     Float     @default(0)
   totalMargin    Float     @default(0)
   lastVisit      DateTime?
 
@@ -63,43 +82,79 @@ model Customer {
 }
 
 model Vehicle {
-  id        String   @id @default(cuid())
-  plate     String   @unique
-  brand     String
-  model     String
-  year      Int
-  vin       String?  // Telaio
-  fuelType  String?  // Benzina, Diesel, ecc.
+  id             String    @id @default(cuid())
+  plate          String    @unique
+  brand          String
+  model          String
+  year           Int
+  vin            String?
+  
+  // Dati Tecnici Aggiuntivi
+  engineSize     String?
+  fuelType       String?   // Diesel, Benzina, ecc.
+  
+  // Tracking Manutenzione
+  totalKm        Int       @default(0)
+  lastOilChange  Int?
+  lastInspection DateTime?
+  nextOilChange  Int?
+  nextInspection DateTime?
 
-  ownerId   String
-  owner     Customer @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        String
+  owner          Customer  @relation(fields: [ownerId], references: [id])
+  jobs           Job[]
   
-  jobs      Job[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([plate])
 }
 
 model Job {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  status      JobStatus @default(ACCETTAZIONE)
+  id                String          @id @default(cuid())
+  jobNumber         String          @unique // Es: JOB-2024-001
+  title             String
+  description       String?         @db.Text
+  status            JobStatus       @default(SCHEDULED)
+  priority          Int             @default(0) // 0=Normale, 1=Alta, 2=Critica
 
-  // Costi e Margini
-  laborCost   Float     @default(0)
-  partsCost   Float     @default(0) // Calcolato dalla somma dei ricambi
-  totalAmount Float     @default(0)
-  margin      Float     @default(0) // (totalAmount - laborCost - partsCost)
+  // Date
+  scheduledDate     DateTime
+  startedAt         DateTime?
+  completedAt       DateTime?
+  deliveredAt       DateTime?
+  estimatedDuration Int?            // Minuti
 
-  vehicleId   String
-  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
-  parts       PartOnJob[] // Manteniamo la relazione esistente con i ricambi
+  // Veicolo Snapshot
+  vehicleId         String
+  vehicle           Vehicle         @relation(fields: [vehicleId], references: [id])
+  kmAtEntry         Int
+  fuelLevel         Int?            @default(0)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  // Finanze e Margini
+  laborHours        Float           @default(0)
+  laborRate         Float           @default(45)
+  laborCost         Float           @default(0)
+  partsCost         Float           @default(0)
+  totalAmount       Float           @default(0)
+  margin            Float           @default(0)
+
+  // Manutenzione
+  maintenanceType   MaintenanceType?
+  
+  // Relazioni
+  parts             PartOnJob[]
+  photos            JobPhoto[]
+  notes             JobNote[]
+  
+  assignedToId      String?
+  assignedTo        User?           @relation(fields: [assignedToId], references: [id])
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([status])
+  @@index([vehicleId])
 }
 
 model Part {
@@ -108,13 +163,15 @@ model Part {
   name        String
   description String?
   
-  // Gestione Margini
-  buyPrice    Float       @default(0) // Prezzo di acquisto per l'officina
-  sellPrice   Float       @default(0) // Prezzo di vendita al cliente
-  
+  // Prezzi e Magazzino
+  buyPrice    Float       @default(0)
+  sellPrice   Float       @default(0)
   stock       Int         @default(0)
   minStock    Int         @default(5)
+  location    String?
+  
   jobs        PartOnJob[]
+  
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -125,11 +182,40 @@ model PartOnJob {
   partId       String
   quantity     Int      @default(1)
   
-  // Prezzo bloccato al momento dell'intervento per storicizzazione corretta
-  appliedPrice Float    @default(0) 
+  // Prezzo congelato al momento dell'uso
+  appliedPrice Float    
+  discount     Float    @default(0)
   
-  job          Job      @relation(fields: [jobId], references: [id])
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   part         Part     @relation(fields: [partId], references: [id])
+  
+  createdAt    DateTime @default(now())
 
   @@unique([jobId, partId])
+}
+
+model JobPhoto {
+  id          String   @id @default(cuid())
+  jobId       String
+  url         String
+  photoType   String   @default("GENERAL") // BEFORE, AFTER, DAMAGE
+  description String?
+  
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+}
+
+model JobNote {
+  id        String   @id @default(cuid())
+  jobId     String
+  content   String   @db.Text
+  noteType  String   @default("GENERAL")
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
 }

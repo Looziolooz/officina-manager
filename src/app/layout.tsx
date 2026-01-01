@@ -60,6 +60,7 @@ export default function RootLayout({
     <html lang="it" className="scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-slate-100`}
+        cz-shortcut-listen="true"
       >
         <SessionProvider>
           <JsonLd />

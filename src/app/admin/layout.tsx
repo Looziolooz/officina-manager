@@ -1,4 +1,4 @@
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import Sidebar from "@/components/admin/Sidebar";
 
 export default function AdminLayout({
   children,
@@ -6,12 +6,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
-      {/* Sidebar fissa a sinistra */}
-      <AdminSidebar />
+    <div className="flex min-h-screen bg-slate-950 text-white">
+      {/* La Sidebar gestisce la sua larghezza internamente */}
+      <Sidebar />
       
-      {/* Contenuto principale spostato a destra per far spazio alla sidebar */}
-      <main className="flex-1 ml-64 p-8">
+      {/* Contenuto principale che si espande */}
+      <main className="flex-1 overflow-x-hidden transition-all duration-300">
         {children}
       </main>
     </div>

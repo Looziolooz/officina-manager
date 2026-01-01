@@ -35,7 +35,7 @@ export default async function CustomersPage({
         </div>
         <Link 
           href="/admin/customers/new" 
-          className="bg-primary hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20"
+          className="bg-primary hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20 cursor-pointer z-20 relative"
         >
           <Plus size={20} /> Nuovo Cliente
         </Link>
@@ -82,7 +82,8 @@ export default async function CustomersPage({
               </div>
               <div className="text-right">
                 <span className="text-xs uppercase tracking-widest text-gray-500 block">Totale Speso</span>
-                <span className="text-lg font-mono font-bold text-green-400">€ {c.totalSpent.toFixed(2)}</span>
+                {/* Gestione sicura se totalSpent è null */}
+                <span className="text-lg font-mono font-bold text-green-400">€ {(c.totalSpent || 0).toFixed(2)}</span>
               </div>
             </div>
           </Link>
