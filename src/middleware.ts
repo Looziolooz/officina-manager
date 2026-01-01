@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
-import { authConfig } from "./lib/auth.config";
+import { authConfig } from "./auth.config";
 
 export default NextAuth(authConfig).auth;
 
 export const config = {
-  // Proteggiamo le rotte admin e api/admin
+  // Matcher per escludere file statici, immagini e le api di next-auth
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -7,23 +7,21 @@ import {
   LayoutDashboard, 
   Users, 
   Wrench, 
-  Settings, 
   LogOut, 
   ChevronLeft, 
   ChevronRight,
   Car,
   Package,
-  Euro // <--- Nuova icona per la Contabilità
+  Euro
 } from "lucide-react";
 
 const MENU_ITEMS = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  // FIX: Aggiornato href per puntare alla nuova dashboard analitica
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Officina", href: "/admin/workshop", icon: Wrench },
   { label: "Magazzino", href: "/admin/warehouse", icon: Package },
-  // 👇 NUOVA VOCE AGGIUNTA
   { label: "Contabilità", href: "/admin/accounting", icon: Euro },
   { label: "Clienti", href: "/admin/customers", icon: Users },
-  { label: "Impostazioni", href: "/admin/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -40,7 +38,6 @@ export default function Sidebar() {
       {/* --- LOGO --- */}
       <div className="h-20 flex items-center justify-center border-b border-white/5 relative">
         <div className="flex items-center gap-3 text-white font-bold tracking-tighter overflow-hidden whitespace-nowrap">
-          {/* FIX: bg-linear-to-br sintassi Tailwind v4 */}
           <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
             <Car className="text-white" size={20} />
           </div>
@@ -61,7 +58,8 @@ export default function Sidebar() {
       {/* --- MENU LINKS --- */}
       <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto overflow-x-hidden">
         {MENU_ITEMS.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+          // Logica attiva migliorata per gestire le sottocartelle
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
 
           return (
