@@ -33,23 +33,33 @@ model User {
   updatedAt      DateTime  @updatedAt
 }
 
+// prisma/schema.prisma
+
 model Customer {
   id             String    @id @default(cuid())
   firstName      String
   lastName       String
   email          String?   @unique
-  phone          String
+  phone          String    @unique
+  alternatePhone String?   // Nuovo
   address        String?
-  
-  // Note CRM Avanzato
-  technicalNotes String?   @db.Text
-  familyNotes    String?   @db.Text
-  
+
+  // CRM Avanzato - Note Separate
+  technicalNotes String?   @db.Text // Visibili solo al meccanico (Box Azzurro)
+  familyNotes    String?   @db.Text // Note personali ufficio (Box Arancione)
+
+  // Statistiche e Loyalty
+  totalSpent     Float     @default(0) // Aggiornato via trigger o server action
+  totalMargin    Float     @default(0)
+  lastVisit      DateTime?
+
   vehicles       Vehicle[]
+  
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  @@index([phone]) // Ricerca rapida per numero di telefono
+  @@index([phone])
+  @@index([lastName])
 }
 
 model Vehicle {
@@ -58,32 +68,38 @@ model Vehicle {
   brand     String
   model     String
   year      Int
-  vin       String?  // Telaio opzionale
+  vin       String?  // Telaio
+  fuelType  String?  // Benzina, Diesel, ecc.
+
   ownerId   String
-  owner     Customer @relation(fields: [ownerId], references: [id])
+  owner     Customer @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
   jobs      Job[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([plate]) // Ricerca rapida per targa
+  @@index([plate])
 }
 
 model Job {
-  id          String      @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String?
-  status      JobStatus   @default(ACCETTAZIONE)
-  
-  // Statistiche e Margini
-  laborCost   Float       @default(0) // Costo manodopera
-  totalAmount Float       @default(0) // Fatturato totale dell'intervento
-  
+  status      JobStatus @default(ACCETTAZIONE)
+
+  // Costi e Margini
+  laborCost   Float     @default(0)
+  partsCost   Float     @default(0) // Calcolato dalla somma dei ricambi
+  totalAmount Float     @default(0)
+  margin      Float     @default(0) // (totalAmount - laborCost - partsCost)
+
   vehicleId   String
-  vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
-  parts       PartOnJob[]
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id])
+  parts       PartOnJob[] // Manteniamo la relazione esistente con i ricambi
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Part {
