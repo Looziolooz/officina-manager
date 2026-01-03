@@ -147,7 +147,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         console.log(`✅ Login successo: ${user.name}`);
         
-        // Ritorna l'oggetto utente
         return {
           id: user.id,
           email: user.email,
@@ -160,7 +159,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // FIX: Cast esplicito per evitare errori di tipo 'unknown'
         token.id = user.id as string;
         token.role = (user.role || "VIEWER") as string;
       }
