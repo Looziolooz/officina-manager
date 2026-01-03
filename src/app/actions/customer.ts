@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-// FIX: Importiamo gli schemi centralizzati invece di ridefinirli qui
+// FIX: Importiamo gli schemi da lib/schemas per evitare duplicazioni ed errori di tipo
 import { customerSchema, customerEditSchema } from "@/lib/schemas"; 
 
 // --- ACTIONS ---
@@ -12,7 +12,7 @@ import { customerSchema, customerEditSchema } from "@/lib/schemas";
 export async function createCustomerWithVehicle(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
   
-  // FIX: Usiamo lo schema importato
+  // Usiamo lo schema centralizzato che include già technicalNotes e familyNotes
   const result = customerSchema.safeParse(rawData);
 
   if (!result.success) {
@@ -47,7 +47,8 @@ export async function createCustomerWithVehicle(formData: FormData) {
         province: data.province,
         pec: data.pec,
         sdiCode: data.sdiCode,
-        technicalNotes: data.technicalNotes, // Ora TypeScript riconoscerà questo campo
+        // Ora questi campi sono riconosciuti perché presenti in customerSchema
+        technicalNotes: data.technicalNotes, 
         familyNotes: data.familyNotes,
         vehicles: {
           create: {
@@ -93,7 +94,7 @@ export async function updateCustomerNotes(
 // 3. AGGIORNAMENTO PROFILO
 export async function updateCustomerProfile(customerId: string, formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
-  // FIX: Usiamo lo schema importato (customerEditSchema)
+  // Usiamo lo schema di edit centralizzato
   const result = customerEditSchema.safeParse(rawData);
 
   if (!result.success) {
