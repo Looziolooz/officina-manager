@@ -4,13 +4,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   // 1. Crea l'utente Admin
+  // Nota: Qui usiamo una password placeholder. 
+  // In produzione DEVI usare uno script che faccia l'hash (come fix-auth.mjs)
   const admin = await prisma.user.upsert({
     where: { email: 'giovanni@gtservice.it' },
-    update: {}, // Se esiste già, non fare nulla
+    update: {}, 
     create: {
       email: 'giovanni@gtservice.it',
       name: 'Giovanni',
-      password: 'GTService2025!', // Password in chiaro (come da tua configurazione auth.ts attuale)
+      password: 'GTService2025!', 
       role: 'SUPER_ADMIN',
     },
   });
@@ -18,7 +20,6 @@ async function main() {
   console.log('Utente Admin creato/verificato:', admin);
 
   // 2. Crea un cliente di prova
-  // FIX: Ora utilizziamo la variabile 'customer' nel console.log per evitare il warning ESLint
   try {
     const customer = await prisma.customer.create({
       data: {
@@ -36,8 +37,9 @@ async function main() {
         }
       }
     });
-  console.log('Cliente di test creato:', customer);
-  } catch (e) { 
+    console.log('Cliente di test creato:', customer);
+  } catch {
+    // FIX: Rimosso (e) perché non utilizzato
     console.log('Il cliente di test esiste già, proseguo...');
   }
 }

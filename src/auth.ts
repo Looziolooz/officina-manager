@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createAuditLog } from "@/lib/audit";
 import { verifyTOTP } from "@/lib/security/2fa";
 import { authConfig } from "./auth.config";
+import bcrypt from "bcryptjs"; // Assicurati che questo import ci sia
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -36,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;
 
-        // 3. Controllo Lockout (Brute Force Protection)
+        // 3. Controllo Lockout
         if (user.isLocked && user.lockedUntil && user.lockedUntil > new Date()) {
           await createAuditLog({
             userId: user.id,
@@ -48,21 +49,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Account bloccato per troppi tentativi. Riprova più tardi.");
         }
 
-        // 4. Verifica Password
-        // NOTA: Al momento usiamo il confronto in chiaro perché hai resettato l'admin così.
-        // In futuro, sostituire con: const isValid = await bcrypt.compare(password, user.password);
-        const isValid = password === user.password; 
+        // 4. Verifica Password (FIX: Ora usiamo bcrypt.compare)
+        const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) {
           const newAttempts = user.loginAttempts + 1;
-          const shouldLock = newAttempts >= 5; // Blocca dopo 5 tentativi
+          const shouldLock = newAttempts >= 5; 
           
           await prisma.user.update({
             where: { id: user.id },
             data: {
               loginAttempts: newAttempts,
               isLocked: shouldLock,
-              lockedUntil: shouldLock ? new Date(Date.now() + 30 * 60 * 1000) : null // 30 minuti di blocco
+              lockedUntil: shouldLock ? new Date(Date.now() + 30 * 60 * 1000) : null 
             }
           });
 
@@ -78,13 +77,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // 5. Verifica 2FA (Se abilitata)
+        // 5. Verifica 2FA
         if (user.twoFactorEnabled) {
-          if (!code) {
-             // Questo errore può essere gestito dal frontend per mostrare il campo input del codice
-             throw new Error("2FA_REQUIRED"); 
-          }
-          
+          if (!code) throw new Error("2FA_REQUIRED"); 
           if (!user.twoFactorSecret) throw new Error("Configurazione 2FA corrotta");
 
           const is2FAValid = verifyTOTP(code, user.twoFactorSecret);
@@ -102,7 +97,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        // 6. Successo: Reset contatori e Log
+        // 6. Successo
         await prisma.user.update({
           where: { id: user.id },
           data: {
@@ -129,7 +124,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        // Tipi ora corretti, rimosso @ts-expect-error
         token.role = user.role;
       }
       return token;
@@ -137,7 +131,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        // Tipi ora corretti, rimosso @ts-expect-error
         session.user.role = token.role as string;
       }
       return session;
