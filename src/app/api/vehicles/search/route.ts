@@ -1,7 +1,7 @@
 // src/app/api/vehicles/search/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth";
 
 export async function GET(req: Request) {
   // Verifica sessione per sicurezza

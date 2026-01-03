@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import Credentials from "next-auth/providers/credentials";
@@ -6,7 +6,37 @@ import { z } from "zod";
 import { createAuditLog } from "@/lib/audit";
 import { verifyTOTP } from "@/lib/security/2fa";
 import { authConfig } from "./auth.config";
-import bcrypt from "bcryptjs"; // Assicurati che questo import ci sia
+import bcrypt from "bcryptjs";
+
+// --- TYPE AUGMENTATION ---
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: string;
+    } & DefaultSession["user"]
+  }
+
+  interface User {
+    role?: string;
+    lockedUntil?: Date | null;
+    loginAttempts?: number;
+    twoFactorEnabled?: boolean;
+    twoFactorSecret?: string | null;
+    isLocked?: boolean;
+  }
+}
+
+// FIX: In NextAuth v5, i tipi JWT si trovano in @auth/core/jwt
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id: string;
+    role: string;
+  }
+}
+
+// --- CONFIGURAZIONE ---
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -49,11 +79,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Account bloccato per troppi tentativi. Riprova più tardi.");
         }
 
-        // 4. Verifica Password (FIX: Ora usiamo bcrypt.compare)
+        // 4. Verifica Password
         const isValid = await bcrypt.compare(password, user.password);
 
         if (!isValid) {
-          const newAttempts = user.loginAttempts + 1;
+          const newAttempts = (user.loginAttempts || 0) + 1;
           const shouldLock = newAttempts >= 5; 
           
           await prisma.user.update({
@@ -116,15 +146,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         console.log(`✅ Login successo: ${user.name}`);
-        return user;
+        
+        // Ritorna l'oggetto utente
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        // FIX: Cast esplicito per evitare errori di tipo 'unknown'
+        token.id = user.id as string;
+        token.role = (user.role || "VIEWER") as string;
       }
       return token;
     },
