@@ -1,17 +1,21 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs'; // Assicurati di importarlo
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hash della password per il login sicuro
+  // Hash della password predefinita
   const hashedPassword = await bcrypt.hash('GTService2025!', 12);
 
-  // 1. Crea/Aggiorna l'utente Admin
+  // 1. Crea o Aggiorna l'utente Admin con la password criptata
   const admin = await prisma.user.upsert({
     where: { email: 'giovanni@gtservice.it' },
     update: {
-      password: hashedPassword // Aggiorna la password con l'hash corretto
+      password: hashedPassword, // Aggiorna password se esiste già
+      role: 'SUPER_ADMIN',
+      isActive: true,
+      isLocked: false,
+      loginAttempts: 0
     }, 
     create: {
       email: 'giovanni@gtservice.it',
@@ -21,31 +25,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Utente Admin configurato:', admin.email);
-
-  // 2. Crea un cliente di prova
-  try {
-    await prisma.customer.create({
-      data: {
-        firstName: 'Mario',
-        lastName: 'Rossi',
-        phone: '+393331234567',
-        email: 'mario.rossi@example.com',
-        vehicles: {
-          create: {
-            plate: 'AB123CD',
-            brand: 'Fiat',
-            model: 'Panda',
-            year: 2020,
-          }
-        }
-      }
-    });
-    console.log('✅ Cliente di test creato');
-  } catch {
-    // FIX: Rimosso (e) per eliminare il warning "unused variable"
-    console.log('ℹ️  Cliente di test già presente.');
-  }
+  console.log('✅ Utente Admin configurato con password criptata:', admin.email);
 }
 
 main()
