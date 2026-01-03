@@ -1,161 +1,220 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useEffect, useState, useTransition } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { createJob } from "@/app/actions/workshop"; // Assicurati che questo import esista
-import { Save, ArrowLeft, AlertCircle } from "lucide-react";
-import { Vehicle } from "@prisma/client";
+import { Save, AlertCircle } from "lucide-react";
+import { createJob, getVehiclesForSelect } from "@/app/actions/workshop";
 
-// Definiamo manualmente i tipi per il form per semplicità, 
-// idealmente dovrebbero matchare con Zod schema
-type JobFormData = {
-  title: string;
-  description?: string;
-  vehicleId: string;
-  kmAtEntry: number;
-  scheduledDate: string; // HTML input date usa string
-  priority: string; // Select ritorna string, poi convertiamo
-  maintenanceType?: string;
-  estimatedDuration?: number;
-};
+const workshopCreateSchema = z.object({
+  title: z.string().min(3, "Titolo richiesto"),
+  description: z.string().optional(),
+  vehicleId: z.string().min(1, "Seleziona un veicolo"),
+  scheduledDate: z.string().min(1, "Data richiesta"),
+  estimatedDuration: z.coerce.number().min(0).optional(),
+  priority: z.coerce.number().int().min(0).max(2).default(0),
+  kmAtEntry: z.coerce.number().int().min(0, "I Km non possono essere negativi"),
+  fuelLevel: z.coerce.number().int().min(0).max(100).optional(),
+  maintenanceType: z.string().optional(),
+});
 
-interface Props {
-  vehicles: Vehicle[]; // Passiamo i veicoli per la select
+type WorkshopCreateData = z.infer<typeof workshopCreateSchema>;
+
+interface VehicleOption {
+  id: string;
+  plate: string;
+  brand: string;
+  model: string;
+  owner: { firstName: string; lastName: string };
 }
 
-export default function JobCreateForm({ vehicles }: Props) {
+export default function JobCreateForm() {
   const router = useRouter();
-  const [serverError, setServerError] = useState("");
-  
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<JobFormData>();
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
 
-  const onSubmit = async (data: JobFormData) => {
-    setServerError("");
-    
-    // Adattiamo i dati per la Server Action (casting tipi)
-    const payload = {
-      ...data,
-      kmAtEntry: Number(data.kmAtEntry),
-      priority: Number(data.priority),
-      estimatedDuration: data.estimatedDuration ? Number(data.estimatedDuration) : undefined,
-      scheduledDate: new Date(data.scheduledDate),
+  useEffect(() => {
+    const loadVehicles = async () => {
+      const data = await getVehiclesForSelect();
+      setVehicles(data);
     };
+    loadVehicles();
+  }, []);
 
-    const res = await createJob(payload);
-    
-    if (res.success) {
-      router.push("/admin/workshop");
-      router.refresh();
-    } else {
-      // Gestione errori Zod flatten o stringa generica
-      const errorMsg = typeof res.error === 'string' 
-        ? res.error 
-        : "Controlla i campi inseriti (dati mancanti o non validi).";
-      setServerError(errorMsg);
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(workshopCreateSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      vehicleId: "",
+      priority: 0,
+      kmAtEntry: 0,
+      fuelLevel: 50,
+      estimatedDuration: 0,
+    },
+  });
+
+  const onSubmit: SubmitHandler<WorkshopCreateData> = (data) => {
+    setServerError(null);
+    startTransition(async () => {
+      // FIX: Conversione in FormData (risolve l'errore di build)
+      const formData = new FormData();
+      
+      formData.append("title", data.title);
+      if (data.description) formData.append("description", data.description);
+      formData.append("vehicleId", data.vehicleId);
+      formData.append("scheduledDate", data.scheduledDate);
+      formData.append("kmAtEntry", data.kmAtEntry.toString());
+      formData.append("priority", data.priority.toString());
+      
+      if (data.estimatedDuration) formData.append("estimatedDuration", data.estimatedDuration.toString());
+      if (data.fuelLevel) formData.append("fuelLevel", data.fuelLevel.toString());
+      if (data.maintenanceType) formData.append("maintenanceType", data.maintenanceType || "");
+
+      const res = await createJob(formData);
+
+      if (res && !res.success && res.message) {
+         setServerError(typeof res.message === 'string' ? res.message : "Errore sconosciuto");
+      } else {
+         // Se successo, redirect (gestito anche dalla server action, ma per sicurezza lato client)
+         router.push("/admin/workshop");
+      }
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 max-w-2xl mx-auto">
-      
-      {/* Veicolo e Titolo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Veicolo *</label>
-          <select 
-            {...register("vehicleId", { required: "Seleziona un veicolo" })}
-            className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white"
-          >
-            <option value="">-- Seleziona --</option>
-            {vehicles.map(v => (
-              <option key={v.id} value={v.id}>
-                {v.plate} - {v.brand} {v.model}
-              </option>
-            ))}
-          </select>
-          {errors.vehicleId && <p className="text-red-500 text-xs mt-1">{errors.vehicleId.message}</p>}
-        </div>
-
-        <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Titolo Lavoro *</label>
-          <input 
-            {...register("title", { required: "Titolo richiesto" })} 
-            placeholder="Es. Tagliando Completo"
-            className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white" 
-          />
-          {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
-        </div>
-      </div>
-
-      {/* Dettagli Tecnici */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">KM Ingresso *</label>
-          <input 
-            type="number" 
-            {...register("kmAtEntry", { required: "KM richiesti", min: 0 })}
-            className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white" 
-          />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Data *</label>
-          <input 
-            type="date" 
-            {...register("scheduledDate", { required: "Data richiesta" })}
-            className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white" 
-          />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Priorità</label>
-          <select {...register("priority")} className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white">
-            <option value="0">Normale</option>
-            <option value="1">Alta</option>
-            <option value="2">Critica</option>
-          </select>
-        </div>
-         <div>
-          <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Durata (min)</label>
-          <input 
-            type="number" 
-            {...register("estimatedDuration")}
-            placeholder="Es. 60"
-            className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white" 
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Descrizione</label>
-        <textarea 
-          {...register("description")} 
-          rows={3} 
-          className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white" 
-        />
-      </div>
-
+    <div className="space-y-6">
       {serverError && (
-        <div className="p-4 bg-red-500/10 text-red-500 rounded-xl flex items-center gap-2 border border-red-500/20">
-          <AlertCircle size={18} /> {serverError}
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+          <AlertCircle size={20} />
+          {serverError}
         </div>
       )}
 
-      <div className="flex gap-4 pt-4">
-        <button 
-          type="button" 
-          onClick={() => router.back()} 
-          className="w-1/3 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+            Dettagli Intervento
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-400 mb-1">Titolo Intervento *</label>
+              <input
+                {...register("title")}
+                placeholder="Es. Tagliando Completo"
+                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              />
+              {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message as string}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-400 mb-1">Descrizione</label>
+              <textarea
+                {...register("description")}
+                rows={3}
+                placeholder="Dettagli aggiuntivi..."
+                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              />
+            </div>
+
+            <div>
+               <label className="block text-sm text-gray-400 mb-1">Veicolo *</label>
+               <select
+                 {...register("vehicleId")}
+                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+               >
+                 <option value="">Seleziona veicolo...</option>
+                 {vehicles.map((v) => (
+                   <option key={v.id} value={v.id}>
+                     {v.plate} - {v.brand} {v.model} ({v.owner.lastName})
+                   </option>
+                 ))}
+               </select>
+               {errors.vehicleId && <p className="text-red-400 text-xs mt-1">{errors.vehicleId.message as string}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Tipo Manutenzione</label>
+              <select
+                {...register("maintenanceType")}
+                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              >
+                <option value="">Altro / Generico</option>
+                <option value="OIL_CHANGE">Cambio Olio</option>
+                <option value="BRAKE_SERVICE">Freni</option>
+                <option value="TIRE_ROTATION">Gomme</option>
+                <option value="GENERAL_INSPECTION">Ispezione Generale</option>
+                <option value="ENGINE_REPAIR">Motore</option>
+                <option value="ELECTRICAL">Elettrico</option>
+                <option value="BODYWORK">Carrozzeria</option>
+              </select>
+            </div>
+            
+            <div>
+               <label className="block text-sm text-gray-400 mb-1">Data Programmata *</label>
+               <input
+                 type="datetime-local"
+                 {...register("scheduledDate")}
+                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none scheme-dark"
+               />
+               {errors.scheduledDate && <p className="text-red-400 text-xs mt-1">{errors.scheduledDate.message as string}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Priorità</label>
+              <select
+                {...register("priority")}
+                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              >
+                <option value="0">Bassa</option>
+                <option value="1">Media</option>
+                <option value="2">Alta</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+            Stato Veicolo all&apos;Ingresso
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
+               <label className="block text-sm text-gray-400 mb-1">Km Attuali *</label>
+               <input
+                 type="number"
+                 {...register("kmAtEntry")}
+                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+               />
+               {errors.kmAtEntry && <p className="text-red-400 text-xs mt-1">{errors.kmAtEntry.message as string}</p>}
+             </div>
+
+             <div>
+               <label className="block text-sm text-gray-400 mb-1">Livello Carburante (%)</label>
+               <input
+                 type="number"
+                 {...register("fuelLevel")}
+                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+               />
+             </div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full bg-primary hover:bg-orange-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ArrowLeft size={18} /> Annulla
+          {isPending ? "Salvataggio..." : <><Save size={20} /> Crea Scheda Lavoro</>}
         </button>
-        <button 
-          type="submit" 
-          disabled={isSubmitting} 
-          className="w-2/3 bg-primary hover:bg-orange-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-        >
-          {isSubmitting ? "Salvataggio..." : <><Save size={18} /> Crea Lavoro</>}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

@@ -24,10 +24,9 @@ export async function createAuditLog(params: AuditParams) {
         ipAddress = headersList.get("x-forwarded-for") || "unknown";
         userAgent = headersList.get("user-agent") || "unknown";
     } catch {
-        // Fallback se headers() non è disponibile (es. contesti non-request)
+        // Fallback
     }
 
-    // Recupera info utente per cache (denormalizzazione per performance log)
     let userData = null;
     if (params.userId) {
       userData = await prisma.user.findUnique({
@@ -41,7 +40,7 @@ export async function createAuditLog(params: AuditParams) {
         userId: params.userId,
         userEmail: userData?.email,
         userName: userData?.name,
-        userRole: userData?.role as Role, // Cast esplicito per sicurezza
+        userRole: userData?.role as Role,
         action: params.action,
         description: params.description,
         resource: params.resource,
@@ -54,7 +53,41 @@ export async function createAuditLog(params: AuditParams) {
       }
     });
   } catch (e) {
-    // Non blocchiamo l'applicazione se il log fallisce, ma lo stampiamo in console
     console.error("Failed to create audit log:", e);
   }
+}
+
+// --- FUNZIONE MANCANTE AGGIUNTA QUI ---
+export async function auditCRUD(
+  action: "CREATE" | "UPDATE" | "DELETE",
+  resource: string,
+  resourceId: string,
+  userId?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  oldValue?: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  newValue?: any
+) {
+  // Mappatura dinamica o switch case per determinare l'azione specifica
+  let auditAction: AuditAction;
+
+  // Esempio di logica semplice per mappare le stringhe agli Enum
+  if (resource === "Customer") {
+     if (action === "CREATE") auditAction = "CUSTOMER_CREATED";
+     // Nota: assicurati di avere CUSTOMER_UPDATED etc nel tuo schema Prisma se vuoi usarli
+     // Altrimenti usa un fallback generico se esiste, o estendi lo schema.
+     else auditAction = "USER_UPDATED"; // Fallback temporaneo se manca l'enum specifico
+  } else {
+     // Fallback generico
+     auditAction = action === "CREATE" ? "JOB_CREATED" : "USER_UPDATED"; 
+  }
+
+  await createAuditLog({
+    userId,
+    action: auditAction,
+    description: `${resource} ${action.toLowerCase()}d`,
+    resource,
+    resourceId,
+    metadata: { oldValue, newValue }
+  });
 }

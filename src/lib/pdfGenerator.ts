@@ -1,73 +1,158 @@
-import jsPDF from 'jspdf';
-import { format } from 'date-fns';
-import { Invoice, Customer, InvoiceItem } from '@prisma/client';
+import jsPDF from "jspdf";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
-// Definiamo un tipo esteso per evitare 'any'
-type InvoiceWithRelations = Invoice & {
-  customer: Customer;
-  items: InvoiceItem[];
-};
+// Definiamo un'interfaccia generica per i dati che passiamo al PDF
+export interface PDFData {
+  title: string;
+  number: string;
+  date: Date;
+  customer: {
+    firstName: string;
+    lastName: string;
+    address?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  };
+  vehicle?: {
+    brand: string;
+    model: string;
+    plate: string;
+    km?: number;
+  } | null;
+  items: {
+    description: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }[];
+  totals: {
+    subtotal: number;
+    tax: number;
+    total: number;
+  };
+}
 
-export const generateInvoicePDF = (invoice: InvoiceWithRelations) => {
+// FIX: Rinomina da generatePDF a generateInvoicePDF per combaciare con l'import
+export const generateInvoicePDF = (data: PDFData) => {
   const doc = new jsPDF();
   
-  // Header Azienda
-  doc.setFontSize(22);
-  doc.text("OFFICINA GT SERVICE", 20, 20);
-  doc.setFontSize(10);
-  doc.text("Via Roma 1, Milano (MI) - P.IVA 12345678901", 20, 26);
+  // --- HEADER ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text("OFFICINA MANAGER", 20, 20);
   
-  // Dati Fattura
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Via Roma 123, 00100 Roma (RM)", 20, 26);
+  doc.text("P.IVA: 12345678901", 20, 30);
+  doc.text("Tel: 06 12345678", 20, 34);
+
+  // --- INFO DOCUMENTO ---
   doc.setFontSize(16);
-  doc.text(`FATTURA N. ${invoice.invoiceNumber}`, 140, 20);
-  doc.setFontSize(10);
-  doc.text(`Data: ${format(new Date(invoice.issueDate), 'dd/MM/yyyy')}`, 140, 26);
+  doc.setFont("helvetica", "bold");
+  doc.text(data.title, 140, 20);
   
-  // Dati Cliente
-  doc.text("CLIENTE:", 20, 50);
-  doc.setFontSize(12);
-  const customerName = invoice.customer.companyName || `${invoice.customer.firstName} ${invoice.customer.lastName}`;
-  doc.text(customerName, 20, 56);
   doc.setFontSize(10);
-  doc.text(invoice.customer.address || "", 20, 61);
-  doc.text(`P.IVA: ${invoice.customer.vatNumber || "-"}`, 20, 66);
-  // Gestione opzionale sdiCode se presente nel modello, altrimenti stringa vuota
-  // @ts-ignore - ignora se sdiCode non è ancora nel tipo generato
-  doc.text(`Cod. SDI: ${invoice.customer.sdiCode || "0000000"}`, 20, 71);
+  doc.setFont("helvetica", "normal");
+  doc.text(`N°: ${data.number}`, 140, 26);
+  doc.text(`Data: ${format(new Date(data.date), "dd/MM/yyyy", { locale: it })}`, 140, 30);
 
-  // Tabella semplice
-  let y = 90;
+  // --- CLIENTE ---
+  let y = 50;
+  doc.setDrawColor(200);
   doc.line(20, y, 190, y);
   y += 5;
-  doc.setFont(undefined, 'bold');
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Cliente:", 20, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${data.customer.firstName} ${data.customer.lastName}`, 50, y);
+  
+  y += 5;
+  if (data.customer.address) {
+    doc.text(`Indirizzo: ${data.customer.address}`, 50, y);
+    y += 5;
+  }
+  if (data.customer.phone) {
+    doc.text(`Tel: ${data.customer.phone}`, 50, y);
+    y += 5;
+  }
+
+  // --- VEICOLO (Se presente) ---
+  if (data.vehicle) {
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Veicolo:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${data.vehicle.brand} ${data.vehicle.model} - Targa: ${data.vehicle.plate}`, 50, y);
+    if (data.vehicle.km) {
+        y += 5;
+        doc.text(`Km: ${data.vehicle.km}`, 50, y);
+    }
+    y += 10;
+  } else {
+    y += 15;
+  }
+
+  // --- TABELLA ARTICOLI ---
+  doc.line(20, y, 190, y);
+  y += 5;
+  
+  doc.setFont("helvetica", "bold");
+  
   doc.text("Descrizione", 20, y);
-  doc.text("Qta", 110, y);
-  doc.text("Prezzo", 130, y);
-  doc.text("Totale", 160, y);
-  doc.setFont(undefined, 'normal');
+  doc.text("Q.tà", 110, y, { align: "center" });
+  doc.text("Prezzo", 140, y, { align: "right" });
+  doc.text("Totale", 190, y, { align: "right" });
+  
+  y += 3;
+  doc.line(20, y, 190, y); // Linea sotto header tabella
   y += 5;
-  doc.line(20, y, 190, y);
-  y += 10;
 
-  invoice.items.forEach((item) => {
-    doc.text(item.description, 20, y);
-    doc.text(String(item.quantity), 110, y);
-    doc.text(`€ ${item.unitPrice.toFixed(2)}`, 130, y);
-    doc.text(`€ ${item.subtotal.toFixed(2)}`, 160, y);
+  doc.setFont("helvetica", "normal");
+
+  data.items.forEach((item) => {
+    // Gestione paginazione semplice
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+    const itemTotal = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(item.total);
+    const itemPrice = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(item.price);
+
+    // Tronca descrizione lunga
+    const description = item.description.length > 45 ? item.description.substring(0, 45) + "..." : item.description;
+
+    doc.text(description, 20, y);
+    doc.text(item.quantity.toString(), 110, y, { align: "center" });
+    doc.text(itemPrice, 140, y, { align: "right" });
+    doc.text(itemTotal, 190, y, { align: "right" });
+    
     y += 7;
   });
 
-  // Totali
-  y += 10;
-  doc.line(130, y, 190, y);
-  y += 7;
-  doc.text(`Imponibile: € ${invoice.subtotal.toFixed(2)}`, 130, y);
+  // --- TOTALI ---
   y += 5;
-  doc.text(`IVA (22%): € ${invoice.taxAmount.toFixed(2)}`, 130, y);
-  y += 7;
-  doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
-  doc.text(`TOTALE: € ${invoice.total.toFixed(2)}`, 130, y);
+  doc.line(110, y, 190, y);
+  y += 5;
 
-  doc.save(`Fattura_${invoice.invoiceNumber}.pdf`);
+  const formatCurrency = (val: number) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(val);
+
+  doc.text("Imponibile:", 140, y, { align: "right" });
+  doc.text(formatCurrency(data.totals.subtotal), 190, y, { align: "right" });
+  y += 5;
+
+  doc.text("IVA (22%):", 140, y, { align: "right" });
+  doc.text(formatCurrency(data.totals.tax), 190, y, { align: "right" });
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("TOTALE:", 140, y, { align: "right" });
+  doc.text(formatCurrency(data.totals.total), 190, y, { align: "right" });
+
+  // Salva il PDF
+  doc.save(`${data.number}.pdf`);
 };

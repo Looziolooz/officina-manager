@@ -1,119 +1,110 @@
 import { prisma } from "@/lib/db";
-import { formatCurrency } from "@/lib/utils";
-import Link from "next/link";
-import { Plus, TrendingUp, TrendingDown, FileText, AlertCircle } from "lucide-react";
 import FinancialCharts from "@/components/accounting/FinancialCharts";
-import InvoiceList from "@/components/accounting/InvoiceList";
+import { ArrowUpCircle, ArrowDownCircle, DollarSign, Wallet } from "lucide-react";
+
+// Funzione helper per formattare valuta
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency: "EUR",
+  }).format(amount);
+};
 
 export default async function AccountingPage() {
-  const currentYear = new Date().getFullYear();
-  const startOfYear = new Date(currentYear, 0, 1);
-
-  // 1. Recupero Dati Aggregati
-  const [income, expenses, overdueInvoices] = await Promise.all([
-    prisma.accountingRecord.aggregate({
-      where: { type: 'INCOME', date: { gte: startOfYear } },
-      _sum: { totalAmount: true }
-    }),
-    prisma.accountingRecord.aggregate({
-      where: { type: 'EXPENSE', date: { gte: startOfYear } },
-      _sum: { totalAmount: true }
-    }),
-    prisma.invoice.findMany({
-      where: { status: 'OVERDUE' },
-      include: { customer: true, items: true }, 
-      take: 5
-    })
-  ]);
-
-  const totalIncome = income._sum.totalAmount || 0;
-  const totalExpenses = expenses._sum.totalAmount || 0;
-  const netMargin = totalIncome - totalExpenses;
-
-  // Recupero Fatture Recenti
-  const recentInvoices = await prisma.invoice.findMany({
-    orderBy: { issueDate: 'desc' },
-    take: 10,
-    include: { customer: true, items: true } 
+  // 1. Calcolo Entrate (Somma fatture PAGATE)
+  const incomeResult = await prisma.invoice.aggregate({
+    where: { status: "PAID" },
+    _sum: { total: true },
   });
+  const totalIncome = incomeResult._sum.total || 0;
+
+  // 2. Calcolo Uscite (Somma spese totali)
+  const expenseResult = await prisma.expense.aggregate({
+    _sum: { totalAmount: true },
+  });
+  const totalExpenses = expenseResult._sum.totalAmount || 0;
+
+  // 3. Calcolo Utile Netto
+  const netProfit = totalIncome - totalExpenses;
+
+  // 4. Dati per il Grafico (FIX: Formattiamo come array per il componente)
+  const chartData = [
+    { name: "Entrate", value: totalIncome },
+    { name: "Uscite", value: totalExpenses },
+    { name: "Utile", value: Math.max(0, netProfit) }, // Mostriamo utile solo se positivo nel grafico
+  ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 p-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white uppercase tracking-tighter">Contabilità</h1>
-          <p className="text-gray-400 text-sm">Panoramica finanziaria {currentYear}</p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/admin/accounting/expenses/new" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold transition-all">
-            Registra Spesa
-          </Link>
-            <Link 
-              href="/admin/accounting/invoices/new" 
-              className="bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20"
-            >
-              <Plus size={20} /> Nuova Fattura
-            </Link>
+          <h1 className="text-3xl font-bold text-white tracking-tighter">Contabilità</h1>
+          <p className="text-gray-400 text-sm">Panoramica finanziaria dell&rsquoofficina</p>
         </div>
       </div>
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={100} /></div>
-          <p className="text-slate-400 text-xs font-bold uppercase mb-1">Fatturato Annuo</p>
-          <h2 className="text-3xl font-bold text-emerald-400 font-mono">
-            {formatCurrency(totalIncome)}
-          </h2>
+        {/* Entrate */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Entrate Totali</h3>
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+              <ArrowUpCircle size={20} />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-white">{formatCurrency(totalIncome)}</p>
+          <p className="text-xs text-green-400 mt-2">+ Fatture saldate</p>
         </div>
 
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingDown size={100} /></div>
-          <p className="text-slate-400 text-xs font-bold uppercase mb-1">Spese Totali</p>
-          <h2 className="text-3xl font-bold text-red-400 font-mono">
-            {formatCurrency(totalExpenses)}
-          </h2>
+        {/* Uscite */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Spese Totali</h3>
+            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">
+              <ArrowDownCircle size={20} />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
+          <p className="text-xs text-red-400 mt-2">- Spese registrate</p>
         </div>
 
-        <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10"><FileText size={100} /></div>
-          <p className="text-slate-400 text-xs font-bold uppercase mb-1">Utile Netto</p>
-          <h2 className={`text-3xl font-bold font-mono ${netMargin >= 0 ? 'text-white' : 'text-red-500'}`}>
-            {formatCurrency(netMargin)}
-          </h2>
+        {/* Utile */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Utile Netto</h3>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${netProfit >= 0 ? 'bg-blue-500/20 text-blue-400' : 'bg-orange-500/20 text-orange-400'}`}>
+              <Wallet size={20} />
+            </div>
+          </div>
+          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-white' : 'text-orange-400'}`}>
+            {formatCurrency(netProfit)}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">Margine operativo</p>
         </div>
       </div>
 
-      {/* ALERT SCADENZE */}
-      {overdueInvoices.length > 0 && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4">
-          <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2">
-            <AlertCircle size={18} /> Fatture Scadute
-          </h3>
-          <div className="space-y-2">
-            {overdueInvoices.map(inv => (
-              <div key={inv.id} className="flex justify-between items-center text-sm text-white bg-red-500/5 p-2 rounded-lg">
-                <span>FT-{inv.invoiceNumber} - {inv.customer.lastName}</span>
-                <span className="font-mono font-bold">{formatCurrency(inv.amountDue)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CONTENUTO TABELLARE + GRAFICI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Lista Fatture */}
-        <div className="lg:col-span-2">
-          {/* FIX: Usato @ts-expect-error invece di @ts-ignore come richiesto da ESLint */}
-          <InvoiceList invoices={recentInvoices} />
+      {/* CHARTS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-1">
+           {/* FIX: Passiamo la prop 'data' corretta invece di income/expenses separati */}
+           <FinancialCharts data={chartData} />
         </div>
         
-        {/* Grafico */}
-        <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 h-100">
-          <h3 className="text-white font-bold mb-4">Andamento Annuale</h3>
-          <FinancialCharts income={totalIncome} expenses={totalExpenses} />
+        {/* Placeholder per futuri dettagli o lista ultime transazioni */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Note Rapide</h3>
+          <p className="text-gray-400 text-sm">
+            Il calcolo delle entrate considera solo le fatture con stato <strong>PAGATO</strong>.
+            Le fatture emesse ma non ancora saldate non vengono conteggiate nel flusso di cassa attuale.
+          </p>
+          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3">
+             <DollarSign className="text-blue-400 shrink-0" />
+             <div className="text-sm text-gray-300">
+               <span className="text-blue-400 font-bold block mb-1">Consiglio</span>
+               Registra sempre le spese appena avvengono per avere un calcolo dell&rsquoutile preciso in tempo reale.
+             </div>
+          </div>
         </div>
       </div>
     </div>

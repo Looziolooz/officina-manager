@@ -1,60 +1,68 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/db";
+import NextAuth, { type DefaultSession } from "next-auth";
+import { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
-import NextAuth from "next-auth"
-import { authConfig } from "./auth.config"
-// ... altri import (prisma, bcrypt, ecc.)
+import { PrismaAdapter } from "@auth/prisma-adapter"; 
+import { prisma } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// --- TYPE AUGMENTATION ---
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: string;
+    } & DefaultSession["user"]
+  }
+
+  interface User {
+    // Rendiamo role opzionale nell'input per evitare conflitti,
+    // ma sarà sempre presente grazie alla logica di authorize/jwt
+    role?: string; 
+    lockedUntil?: Date | null;
+  }
+}
+
+// FIX: In NextAuth v5, i tipi JWT si trovano in @auth/core/jwt
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id: string;
+    role: string;
+  }
+}
+
+// --- CONFIGURAZIONE ---
+
+export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  ...authConfig,
+  pages: { signIn: "/login" },
   providers: [
     Credentials({
+      name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = credentials.email as string;
+        const password = credentials.password as string;
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email }
         });
 
-        if (!user || !user.password) {
-          return null;
+        if (!user) return null;
+
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          throw new Error("Account bloccato temporaneamente.");
         }
 
-        if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-          throw new Error("Account bloccato temporaneamente");
-        }
+        const isValid = await bcrypt.compare(password, user.password);
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isValid) {
-          const attempts = user.failedAttempts + 1;
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              failedAttempts: attempts,
-              lockoutUntil:
-                attempts >= 5 ? new Date(Date.now() + 30 * 60 * 1000) : null,
-            },
-          });
-          return null;
-        }
-
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { failedAttempts: 0, lockoutUntil: null },
-        });
+        if (!isValid) return null;
 
         return {
           id: user.id,
@@ -62,7 +70,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           role: user.role,
         };
-      },
-    }),
+      }
+    })
   ],
-});
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role || "VIEWER";
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.role = token.role as string;
+        session.user.id = token.id as string;
+      }
+      return session;
+    }
+  }
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

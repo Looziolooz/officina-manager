@@ -44,6 +44,8 @@ enum JobStatus {
   WAITING_PARTS
   COMPLETED
   DELIVERED
+  CANCELLED // Aggiunto per completezza
+  PENDING   // Aggiunto per compatibilità con il codice esistente
 }
 
 enum MaintenanceType {
@@ -148,22 +150,22 @@ enum SMSType {
 // --- CORE MODELS ---
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  name              String
-  password          String    
-  role              Role      @default(VIEWER)
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  password         String    
+  role             Role      @default(VIEWER)
   
   // Account Status
-  isActive          Boolean   @default(true)
-  isLocked          Boolean   @default(false)
-  lockedUntil       DateTime?
+  isActive         Boolean   @default(true)
+  isLocked         Boolean   @default(false)
+  lockedUntil      DateTime?
   
   // Login Tracking
-  loginAttempts     Int       @default(0)
-  lastLoginAttempt  DateTime?
-  lastLoginSuccess  DateTime?
-  lastLoginIP       String?
+  loginAttempts    Int       @default(0)
+  lastLoginAttempt DateTime?
+  lastLoginSuccess DateTime?
+  lastLoginIP      String?
   
   // Password Policy
   passwordChangedAt DateTime  @default(now())
@@ -213,28 +215,28 @@ model TwoFactorBackupCode {
 }
 
 model AuditLog {
-  id           String      @id @default(cuid())
+  id             String      @id @default(cuid())
   
-  userId       String?
-  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userEmail    String?     
-  userName     String?     
-  userRole     Role?       
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userEmail      String?     
+  userName       String?     
+  userRole       Role?       
   
-  action       AuditAction
-  resource     String?     
-  resourceId   String?     
+  action         AuditAction
+  resource       String?     
+  resourceId     String?     
   
-  description  String      @db.Text
-  metadata     Json?       
+  description    String      @db.Text
+  metadata       Json?       
   
-  ipAddress    String?
-  userAgent    String?     @db.Text
+  ipAddress      String?
+  userAgent      String?     @db.Text
   
-  isSuccess    Boolean     @default(true)
-  riskLevel    String?     @default("LOW") 
+  isSuccess      Boolean     @default(true)
+  riskLevel      String?     @default("LOW") 
   
-  createdAt    DateTime    @default(now())
+  createdAt      DateTime    @default(now())
 
   @@index([userId])
   @@index([action])
@@ -267,14 +269,15 @@ model Customer {
   totalMargin    Float     @default(0)
   lastVisit      DateTime?
 
-  smsEnabled        Boolean    @default(true)
-  marketingSMS      Boolean    @default(false)
-  privacyConsent    Boolean    @default(false)
+  smsEnabled         Boolean    @default(true)
+  marketingSMS       Boolean    @default(false)
+  privacyConsent     Boolean    @default(false)
   privacyConsentDate DateTime?
 
   vehicles       Vehicle[]
   invoices       Invoice[]
   smsMessages    SMSMessage[]
+  jobs           Job[] // Relazione inversa aggiunta
   
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -318,53 +321,60 @@ model Vehicle {
 }
 
 model Job {
-  id                String          @id @default(cuid())
-  jobNumber         String          @unique
-  title             String
-  description       String?         @db.Text
-  status            JobStatus       @default(SCHEDULED)
-  priority          Int             @default(0)
+  id                 String           @id @default(cuid())
+  jobNumber          String           @unique
+  title              String
+  description        String?          @db.Text
+  status             JobStatus        @default(SCHEDULED)
+  priority           Int              @default(0)
 
-  scheduledDate     DateTime
-  startedAt         DateTime?
-  completedAt       DateTime?
-  deliveredAt       DateTime?
+  scheduledDate      DateTime
+  startedAt          DateTime?
+  completedAt        DateTime?
+  deliveredAt        DateTime?
   estimatedDuration Int?
 
-  vehicleId         String
-  vehicle           Vehicle         @relation(fields: [vehicleId], references: [id])
-  kmAtEntry         Int
-  fuelLevel         Int?            @default(0)
-
-  laborHours        Float           @default(0)
-  laborRate         Float           @default(45)
-  laborCost         Float           @default(0)
-  partsCost         Float           @default(0)
-  totalAmount       Float           @default(0)
-  margin            Float           @default(0)
-
-  maintenanceType   MaintenanceType?
+  // Relazione Veicolo
+  vehicleId          String
+  vehicle            Vehicle          @relation(fields: [vehicleId], references: [id])
   
-  parts             PartOnJob[]
-  photos            JobPhoto[]
-  notes             JobNote[]
-  
-  assignedToId      String?
-  assignedTo        User?           @relation(fields: [assignedToId], references: [id])
+  // Relazione Cliente (CRUCIALE per il frontend)
+  customerId         String
+  customer           Customer         @relation(fields: [customerId], references: [id])
 
-  invoice           Invoice?
-  stockMovements    StockMovement[] 
+  kmAtEntry          Int
+  fuelLevel          Int?             @default(0)
+
+  laborHours         Float            @default(0)
+  laborRate          Float            @default(45)
+  laborCost          Float            @default(0)
+  partsCost          Float            @default(0)
+  totalAmount        Float            @default(0)
+  margin             Float            @default(0)
+
+  maintenanceType    MaintenanceType?
+  
+  parts              PartOnJob[]
+  photos             JobPhoto[]
+  notes              JobNote[]
+  
+  assignedToId       String?
+  assignedTo         User?            @relation(fields: [assignedToId], references: [id])
+
+  invoice            Invoice?
+  stockMovements     StockMovement[] 
   accountingRecords AccountingRecord[] 
 
-  readySMSSent      Boolean       @default(false)
-  readySMSSentAt    DateTime?
-  smsMessages       SMSMessage[]
+  readySMSSent       Boolean        @default(false)
+  readySMSSentAt     DateTime?
+  smsMessages        SMSMessage[]
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   @@index([status])
   @@index([vehicleId])
+  @@index([customerId])
 }
 
 model JobPhoto {
@@ -389,86 +399,86 @@ model JobNote {
 }
 
 model Part {
-  id                String          @id @default(cuid())
-  code              String          @unique
-  name              String
-  description       String?         @db.Text
-  category          String          @default("GENERIC")
-  brand             String?
+  id                 String           @id @default(cuid())
+  code               String           @unique
+  name               String
+  description        String?          @db.Text
+  category           String           @default("GENERIC")
+  brand              String?
   
-  buyPrice          Float           @default(0)
-  sellPrice         Float           @default(0)
-  markup            Float           @default(30)
+  buyPrice           Float            @default(0)
+  sellPrice          Float            @default(0)
+  markup             Float            @default(30)
   
-  stock             Int             @default(0)
-  minStock          Int             @default(5)
-  maxStock          Int?            @default(50)
-  reorderPoint      Int?            @default(10)
-  stockLevel        StockLevel      @default(NORMAL)
+  stock              Int              @default(0)
+  minStock           Int              @default(5)
+  maxStock           Int?             @default(50)
+  reorderPoint       Int?             @default(10)
+  stockLevel         StockLevel       @default(NORMAL)
   
-  location          String?
-  barcode           String?         @unique
-  supplierCode      String?
-  supplierName      String?
+  location           String?
+  barcode            String?          @unique
+  supplierCode       String?
+  supplierName       String?
   
-  totalValue        Float           @default(0)
+  totalValue         Float            @default(0)
   lastPurchasePrice Float?
   lastPurchaseDate  DateTime?
   
-  jobs              PartOnJob[]
-  movements         StockMovement[]
-  alerts            StockAlert[]
+  jobs               PartOnJob[]
+  movements          StockMovement[]
+  alerts             StockAlert[]
   
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   
   @@index([category])
   @@index([stockLevel])
 }
 
 model PartOnJob {
-  id           String   @id @default(cuid())
-  jobId        String
-  partId       String
-  quantity     Int      @default(1)
+  id        String   @id @default(cuid())
+  jobId     String
+  partId    String
+  quantity  Int      @default(1)
   appliedPrice Float    
-  discount     Float    @default(0)
+  discount      Float    @default(0)
   
-  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  part         Part     @relation(fields: [partId], references: [id])
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  part      Part     @relation(fields: [partId], references: [id])
   
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([jobId, partId])
 }
 
 model StockMovement {
-  id                String        @id @default(cuid())
-  movementNumber    String        @unique
+  id                String         @id @default(cuid())
+  movementNumber    String         @unique
   type              MovementType
   
   partId            String
-  part              Part          @relation(fields: [partId], references: [id])
+  part              Part           @relation(fields: [partId], references: [id])
   quantity          Int
   
-  unitPrice         Float         @default(0)
-  totalValue        Float         @default(0) 
+  unitPrice         Float          @default(0)
+  totalValue        Float          @default(0) 
   
-  jobId             String?       
-  job               Job?          @relation(fields: [jobId], references: [id])
+  jobId             String?        
+  job               Job?           @relation(fields: [jobId], references: [id])
 
   documentNumber    String?
   
   stockBefore       Int
   stockAfter        Int
   
-  notes             String?       @db.Text
-  reason            String?       
+  notes             String?        @db.Text
+  reason            String?        
   
   performedById     String
-  performedBy       User          @relation(fields: [performedById], references: [id])
+  performedBy       User           @relation(fields: [performedById], references: [id])
   
-  createdAt         DateTime      @default(now())
+  createdAt         DateTime       @default(now())
   
   @@index([partId])
   @@index([type])
@@ -491,39 +501,39 @@ model StockAlert {
 }
 
 model Invoice {
-  id                String          @id @default(cuid())
-  invoiceNumber     String          @unique 
+  id                String           @id @default(cuid())
+  invoiceNumber     String           @unique 
   year              Int
-  number            Int             
-  status            InvoiceStatus   @default(DRAFT)
+  number            Int              
+  status            InvoiceStatus    @default(DRAFT)
   
-  issueDate         DateTime        @default(now())
+  issueDate         DateTime         @default(now())
   dueDate           DateTime
   paidDate          DateTime?
 
   customerId        String
-  customer          Customer        @relation(fields: [customerId], references: [id])
+  customer          Customer         @relation(fields: [customerId], references: [id])
 
-  jobId             String?         @unique
-  job               Job?            @relation(fields: [jobId], references: [id])
+  jobId             String?          @unique
+  job               Job?             @relation(fields: [jobId], references: [id])
 
-  subtotal          Float           @default(0) 
-  taxRate           Float           @default(22)
-  taxAmount         Float           @default(0)
-  total             Float           @default(0)
+  subtotal          Float            @default(0) 
+  taxRate           Float            @default(22)
+  taxAmount         Float            @default(0)
+  total             Float            @default(0)
   
-  amountPaid        Float           @default(0)
-  amountDue         Float           @default(0)
+  amountPaid        Float            @default(0)
+  amountDue         Float            @default(0)
   paymentMethod     PaymentMethod?
   
-  notes             String?         @db.Text
-  internalNotes     String?         @db.Text
+  notes             String?          @db.Text
+  internalNotes     String?          @db.Text
 
   items             InvoiceItem[]
   accountingRecord  AccountingRecord?
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([status])
   @@index([issueDate])
@@ -545,21 +555,21 @@ model InvoiceItem {
 }
 
 model Expense {
-  id                String          @id @default(cuid())
-  expenseNumber     String?         
+  id                String           @id @default(cuid())
+  expenseNumber     String?          
   
   category          ExpenseCategory
   description       String
   
-  amount            Float           
-  taxAmount         Float           @default(0)
+  amount            Float            
+  taxAmount         Float            @default(0)
   totalAmount       Float
   
-  expenseDate       DateTime        @default(now())
+  expenseDate       DateTime         @default(now())
   dueDate           DateTime?
   paidDate          DateTime?
   
-  isPaid            Boolean         @default(false)
+  isPaid            Boolean          @default(false)
   paymentMethod     PaymentMethod?
   
   supplierName      String
@@ -567,58 +577,58 @@ model Expense {
   
   accountingRecord  AccountingRecord?
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([category])
   @@index([expenseDate])
 }
 
 model AccountingRecord {
-  id                String          @id @default(cuid())
-  recordNumber      String          @unique 
+  id                String           @id @default(cuid())
+  recordNumber      String           @unique 
   type              AccountingType
   
-  date              DateTime        @default(now())
+  date              DateTime         @default(now())
   
-  amount            Float           
-  totalAmount       Float           
+  amount            Float            
+  totalAmount       Float            
   
   category          String
   description       String
   
-  invoiceId         String?         @unique
-  invoice           Invoice?        @relation(fields: [invoiceId], references: [id])
+  invoiceId         String?          @unique
+  invoice           Invoice?         @relation(fields: [invoiceId], references: [id])
   
-  expenseId         String?         @unique
-  expense           Expense?        @relation(fields: [expenseId], references: [id])
+  expenseId         String?          @unique
+  expense           Expense?         @relation(fields: [expenseId], references: [id])
   
   jobId             String?
-  job               Job?            @relation(fields: [jobId], references: [id])
+  job               Job?             @relation(fields: [jobId], references: [id])
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([type])
   @@index([date])
 }
 
 model SMSMessage {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   
   phoneNumber       String
   customerId        String?
-  customer          Customer?       @relation(fields: [customerId], references: [id])
+  customer          Customer?        @relation(fields: [customerId], references: [id])
   
-  message           String          @db.Text
+  message           String           @db.Text
   type              SMSType
   
   provider          SMSProvider
-  status            SMSStatus       @default(PENDING)
+  status            SMSStatus        @default(PENDING)
   providerMessageId String?
   
-  attempts          Int             @default(0)
-  maxAttempts       Int             @default(3)
+  attempts          Int              @default(0)
+  maxAttempts       Int              @default(3)
   lastAttemptAt     DateTime?
   
   cost              Float?
@@ -629,16 +639,16 @@ model SMSMessage {
   deliveredAt       DateTime?
   failedAt          DateTime?
   
-  errorMessage      String?         @db.Text
-  providerResponse  String?         @db.Text
+  errorMessage      String?          @db.Text
+  providerResponse  String?          @db.Text
   
   vehicleId         String?
-  vehicle           Vehicle?        @relation(fields: [vehicleId], references: [id])
+  vehicle           Vehicle?         @relation(fields: [vehicleId], references: [id])
   jobId             String?
-  job               Job?            @relation(fields: [jobId], references: [id])
+  job               Job?             @relation(fields: [jobId], references: [id])
   
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   
   @@index([status])
   @@index([type])

@@ -1,160 +1,179 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm, SubmitHandler, SubmitErrorHandler, Resolver } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User, Car, CheckCircle, AlertCircle } from "lucide-react";
+import { User, Car, AlertCircle, Save } from "lucide-react";
 import { createCustomerWithVehicle } from "@/app/actions/customer";
 import { customerSchema, type CustomerFormData } from "@/lib/schemas";
+import { useState, useTransition } from "react";
+import Link from "next/link";
 
 export default function NewCustomerPage() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [serverError, setServerError] = useState("");
-  
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CustomerFormData>({
-    resolver: zodResolver(customerSchema) as unknown as Resolver<CustomerFormData>,
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  // FIX: Rimosso <CustomerFormData> generico per lasciare che il resolver inferisca i tipi corretti
+  // (questo risolve il conflitto con z.coerce.number)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(customerSchema),
     defaultValues: {
-      firstName: "", lastName: "", phone: "", email: "", address: "",
-      plate: "", brand: "", model: "", 
+      firstName: "", 
+      lastName: "", 
+      phone: "", 
+      email: "",
+      plate: "", 
+      brand: "", 
+      model: "",
       year: new Date().getFullYear(),
-      technicalNotes: "", familyNotes: "", vin: "", fuelType: "Diesel"
+      technicalNotes: "", 
+      familyNotes: "", 
+      vin: "", 
+      fuelType: "Diesel",
+      address: "",
+      alternatePhone: "",
+      companyName: "",
+      vatNumber: "",
+      fiscalCode: "",
+      city: "",
+      postalCode: "",
+      province: "",
+      pec: "",
+      sdiCode: "",
+      engineSize: ""
     }
   });
 
-  const onSubmit: SubmitHandler<CustomerFormData> = async (data) => {
-    setServerError(""); // Resetta errori precedenti
-    const res = await createCustomerWithVehicle(data);
-    if (res.success) {
-      router.push(`/admin/customers/${res.customerId}`);
-    } else {
-      // Mostra l'errore specifico restituito dal server (es. "Targa già esistente")
-      setServerError(typeof res.error === 'string' ? res.error : "Errore validazione server");
-    }
-  };
+  // FIX: Tipizziamo esplicitamente l'handler
+  const onSubmit: SubmitHandler<CustomerFormData> = (data) => {
+    setError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          formData.append(key, value.toString());
+        }
+      });
 
-  const onError: SubmitErrorHandler<CustomerFormData> = (errs) => {
-    console.error("Validazione fallita:", errs);
-  };
+      const result = await createCustomerWithVehicle(formData);
 
-  // Mappa dei nomi dei campi per messaggi più leggibili
-  const fieldLabels: Record<string, string> = {
-    firstName: "Nome", lastName: "Cognome", phone: "Telefono", email: "Email",
-    plate: "Targa", brand: "Marca", model: "Modello", year: "Anno"
+      if (result && !result.success && result.message) {
+        setError(typeof result.message === 'string' ? result.message : "Errore durante il salvataggio");
+      }
+    });
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-white mb-8">Registrazione Cliente</h1>
-      
-      <div className="flex justify-between mb-8 relative">
-        <div className="absolute top-1/2 left-0 w-full h-1 bg-white/10 -z-10" />
-        {[1, 2, 3].map((s) => (
-          <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-all cursor-pointer ${
-            step >= s ? "bg-primary border-slate-950 text-white" : "bg-slate-900 border-white/10 text-gray-500"
-          }`} onClick={() => setStep(s)}>
-            {s}
-          </div>
-        ))}
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex items-center gap-4 mb-8">
+        <Link href="/admin/customers" className="text-gray-400 hover:text-white">
+           ← Torna indietro
+        </Link>
+        <h1 className="text-3xl font-bold text-white">Nuovo Cliente</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10" noValidate>
-        
-        {/* STEP 1: ANAGRAFICA */}
-        <div className={step === 1 ? "block space-y-4" : "hidden"}>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2"><User /> Anagrafica</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input {...register("firstName")} placeholder="Nome *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.firstName ? 'border-red-500' : 'border-white/10'}`} />
-              </div>
-              <div>
-                <input {...register("lastName")} placeholder="Cognome *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.lastName ? 'border-red-500' : 'border-white/10'}`} />
-              </div>
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+          <AlertCircle size={20} />
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* SEZIONE 1: CLIENTE */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+            <User className="text-primary" size={24} />
+            <h2 className="text-xl font-bold text-white">Anagrafica Cliente</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Nome *</label>
+              <input {...register("firstName")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Mario" />
+              {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName.message as string}</p>}
             </div>
             <div>
-              <input {...register("phone")} placeholder="Telefono *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.phone ? 'border-red-500' : 'border-white/10'}`} />
+              <label className="block text-sm text-gray-400 mb-1">Cognome *</label>
+              <input {...register("lastName")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Rossi" />
+              {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName.message as string}</p>}
             </div>
-            <input {...register("email")} placeholder="Email" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.email ? 'border-red-500' : 'border-white/10'}`} />
-            <textarea {...register("address")} placeholder="Indirizzo" className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white min-h-20" />
-            
-            <button type="button" onClick={() => setStep(2)} className="w-full bg-primary hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all cursor-pointer">Avanti</button>
-        </div>
-
-        {/* STEP 2: VEICOLO */}
-        <div className={step === 2 ? "block space-y-4" : "hidden"}>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2"><Car /> Veicolo</h2>
             <div>
-              <input {...register("plate")} placeholder="Targa (AA123BB) *" className={`w-full bg-black/20 border p-3 rounded-lg text-white uppercase font-mono text-lg ${errors.plate ? 'border-red-500' : 'border-white/10'}`} />
+              <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
+              <input {...register("phone")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="+39 333..." />
+              {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message as string}</p>}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input {...register("brand")} placeholder="Marca *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.brand ? 'border-red-500' : 'border-white/10'}`} />
-              </div>
-              <div>
-                <input {...register("model")} placeholder="Modello *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.model ? 'border-red-500' : 'border-white/10'}`} />
-              </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Email</label>
+              <input {...register("email")} type="email" className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="mario@email.com" />
+              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message as string}</p>}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input {...register("year")} type="number" placeholder="Anno *" className={`w-full bg-black/20 border p-3 rounded-lg text-white ${errors.year ? 'border-red-500' : 'border-white/10'}`} />
-              </div>
-              <select {...register("fuelType")} className="w-full bg-black/20 border border-white/10 p-3 rounded-lg text-white">
-                <option value="Diesel">Diesel</option>
-                <option value="Benzina">Benzina</option>
-                <option value="Ibrido">Ibrido</option>
-                <option value="Elettrico">Elettrico</option>
-              </select>
-            </div>
-            <div className="flex gap-4">
-              <button type="button" onClick={() => setStep(1)} className="w-1/2 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg transition-all cursor-pointer">Indietro</button>
-              <button type="button" onClick={() => setStep(3)} className="w-1/2 bg-primary hover:bg-orange-700 text-white font-bold py-3 rounded-lg transition-all cursor-pointer">Avanti</button>
-            </div>
+          </div>
+          
+          <div className="mt-4">
+             <label className="block text-sm text-gray-400 mb-1">Note Tecniche (Opzionale)</label>
+             <textarea {...register("technicalNotes")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" rows={2} placeholder="Es. Preferisce ricambi originali..." />
+          </div>
         </div>
 
-        {/* STEP 3: RIEPILOGO E SALVATAGGIO */}
-        <div className={step === 3 ? "block space-y-6" : "hidden"}>
-            <h2 className="text-xl font-bold text-white">Conferma Dati</h2>
-            
-            {/* Box Errori Dinamico */}
-            {(Object.keys(errors).length > 0 || serverError) && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex flex-col gap-2 animate-pulse">
-                <div className="flex items-center gap-2 font-bold text-red-500">
-                   <AlertCircle size={20} /> Attenzione:
-                </div>
-                {serverError && <p className="text-white font-bold">{serverError}</p>}
-                
-                {Object.keys(errors).length > 0 && (
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {Object.entries(errors).map(([key, error]) => (
-                      <li key={key}>
-                        <span className="font-bold">{fieldLabels[key] || key}:</span> {error?.message as string}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-xs mt-2 text-red-300">Torna indietro per correggere i campi evidenziati.</p>
-              </div>
-            )}
+        {/* SEZIONE 2: VEICOLO */}
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+            <Car className="text-primary" size={24} />
+            <h2 className="text-xl font-bold text-white">Dati Veicolo</h2>
+          </div>
 
-            {!Object.keys(errors).length && !serverError && (
-               <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl flex items-center gap-2">
-                  <CheckCircle size={20} /> Tutto pronto per il salvataggio.
-               </div>
-            )}
-
-            <div className="flex gap-4">
-              <button type="button" onClick={() => setStep(2)} className="w-1/2 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg transition-all cursor-pointer">Indietro</button>
-              
-              <button 
-                type="submit" 
-                disabled={isSubmitting} 
-                className="w-1/2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center cursor-pointer disabled:opacity-50"
-              >
-                {isSubmitting ? "Salvataggio..." : "Salva Tutto"}
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Targa *</label>
+              <input {...register("plate")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white uppercase font-mono focus:border-primary outline-none" placeholder="AB123CD" />
+              {errors.plate && <p className="text-red-400 text-xs mt-1">{errors.plate.message as string}</p>}
             </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Marca *</label>
+              <input {...register("brand")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Fiat" />
+              {errors.brand && <p className="text-red-400 text-xs mt-1">{errors.brand.message as string}</p>}
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Modello *</label>
+              <input {...register("model")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Panda" />
+              {errors.model && <p className="text-red-400 text-xs mt-1">{errors.model.message as string}</p>}
+            </div>
+            <div>
+               <label className="block text-sm text-gray-400 mb-1">Anno</label>
+               <input {...register("year")} type="number" className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" />
+            </div>
+            <div>
+               <label className="block text-sm text-gray-400 mb-1">Alimentazione</label>
+               <select {...register("fuelType")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none">
+                  <option value="Diesel">Diesel</option>
+                  <option value="Benzina">Benzina</option>
+                  <option value="Ibrida">Ibrida</option>
+                  <option value="Elettrica">Elettrica</option>
+                  <option value="GPL">GPL</option>
+                  <option value="Metano">Metano</option>
+               </select>
+            </div>
+          </div>
         </div>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full bg-primary hover:bg-orange-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPending ? (
+            "Salvataggio in corso..."
+          ) : (
+            <>
+              <Save size={20} /> Salva Cliente e Veicolo
+            </>
+          )}
+        </button>
       </form>
     </div>
   );

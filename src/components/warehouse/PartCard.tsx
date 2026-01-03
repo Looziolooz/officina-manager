@@ -1,78 +1,100 @@
 "use client";
 
+import { useState } from "react";
+import { Package, MapPin, ArrowRightLeft } from "lucide-react";
 import { Part } from "@prisma/client";
-import { Package, TrendingUp, AlertTriangle, AlertOctagon } from "lucide-react";
-import StockMovementModal from "./StockMovementModal"; // Lo creiamo dopo
+import StockMovementModal from "./StockMovementModal";
 
-interface Props {
+interface PartCardProps {
   part: Part;
-  userId: string; // ID utente per le azioni
 }
 
-export default function PartCard({ part, userId }: Props) {
-  // Calcolo % per la progress bar
-  const maxRef = part.maxStock || part.minStock * 3;
-  const progressPercent = Math.min((part.stock / maxRef) * 100, 100);
+export default function PartCard({ part }: PartCardProps) {
+  // Gestiamo lo stato di apertura del modale qui dentro la card
+  const [isMovementModalOpen, setMovementModalOpen] = useState(false);
 
-  const getStatusColor = (level: string) => {
-    switch (level) {
-      case 'CRITICAL': return { border: 'border-red-500', text: 'text-red-500', bg: 'bg-red-500', bar: 'bg-red-500' };
-      case 'LOW': return { border: 'border-yellow-500', text: 'text-yellow-500', bg: 'bg-yellow-500', bar: 'bg-yellow-500' };
-      case 'HIGH': return { border: 'border-blue-500', text: 'text-blue-500', bg: 'bg-blue-500', bar: 'bg-blue-500' };
-      default: return { border: 'border-green-500', text: 'text-green-500', bg: 'bg-green-500', bar: 'bg-green-500' };
-    }
+  // Helper per formattare valuta
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("it-IT", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
   };
 
-  const colors = getStatusColor(part.stockLevel);
+  const isLowStock = part.stock <= part.minStock;
 
   return (
-    <div className={`bg-slate-900 border ${colors.border}/30 rounded-2xl p-5 hover:border-${colors.text.split('-')[1]}-400 transition-all shadow-lg group`}>
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${colors.bg}/10 flex items-center justify-center ${colors.text}`}>
-             <Package size={20} />
+    <>
+      <div className={`bg-slate-900/50 border ${isLowStock ? 'border-red-500/50' : 'border-white/10'} rounded-2xl p-6 hover:bg-slate-900/80 transition-all group relative overflow-hidden flex flex-col h-full`}>
+        {/* Indicatore Low Stock */}
+        {isLowStock && (
+          <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+            SCORTA BASSA
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-primary shrink-0">
+            <Package size={24} />
           </div>
           <div>
-            <h3 className="font-bold text-white text-lg leading-tight">{part.name}</h3>
-            <span className="text-xs font-mono text-slate-400">{part.code}</span>
+            <h3 className="font-bold text-white text-lg leading-tight line-clamp-1" title={part.name}>
+                {part.name}
+            </h3>
+            <p className="text-gray-400 text-sm font-mono mt-1">{part.code}</p>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/5">
+                    {part.category}
+                </span>
+                {part.brand && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/5">
+                        {part.brand}
+                    </span>
+                )}
+            </div>
           </div>
         </div>
-        {part.stockLevel === 'CRITICAL' && <AlertOctagon className="text-red-500 animate-pulse" size={20} />}
-        {part.stockLevel === 'LOW' && <AlertTriangle className="text-yellow-500" size={20} />}
+
+        {/* Info Grid - Spinge il footer in basso grazie a flex-col e margin auto */}
+        <div className="grid grid-cols-2 gap-4 mb-6 mt-auto">
+          <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+            <p className="text-gray-500 text-xs mb-1">Giacenza</p>
+            <p className={`text-xl font-mono font-bold ${isLowStock ? 'text-red-400' : 'text-white'}`}>
+              {part.stock} <span className="text-xs font-normal text-gray-500">pz</span>
+            </p>
+          </div>
+          <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+            <p className="text-gray-500 text-xs mb-1">Vendita</p>
+            <p className="text-xl font-mono font-bold text-white">
+              {formatCurrency(part.sellPrice)}
+            </p>
+          </div>
+        </div>
+
+        {/* Footer / Actions */}
+        <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+          <div className="flex items-center gap-2 text-gray-400 text-xs">
+            <MapPin size={14} />
+            {part.location || "N/D"}
+          </div>
+
+          <button
+            onClick={() => setMovementModalOpen(true)}
+            className="flex items-center gap-2 bg-white/5 hover:bg-primary hover:text-white text-gray-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <ArrowRightLeft size={16} />
+            Movimenta
+          </button>
+        </div>
       </div>
 
-      {/* Info Grid */}
-      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div className="bg-white/5 p-2 rounded-lg">
-          <span className="text-xs text-slate-500 block uppercase">Ubicazione</span>
-          <span className="font-mono text-white font-bold">{part.location || "N/A"}</span>
-        </div>
-        <div className="bg-white/5 p-2 rounded-lg text-right">
-          <span className="text-xs text-slate-500 block uppercase">Prezzo Vendita</span>
-          <span className="font-mono text-emerald-400 font-bold">€{part.sellPrice.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {/* Stock Progress */}
-      <div className="mb-4">
-        <div className="flex justify-between text-xs mb-1">
-          <span className="text-slate-400">Stock: <strong className="text-white">{part.stock}</strong></span>
-          <span className="text-slate-500">Min: {part.minStock}</span>
-        </div>
-        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-          <div 
-            className={`h-full ${colors.bar} transition-all duration-500`} 
-            style={{ width: `${progressPercent}%` }} 
-          />
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2 mt-2">
-        <StockMovementModal part={part} type="IN" userId={userId} />
-        <StockMovementModal part={part} type="OUT" userId={userId} />
-      </div>
-    </div>
+      {/* FIX: Collegamento corretto al modale con le props aggiornate */}
+      <StockMovementModal
+        isOpen={isMovementModalOpen}
+        onClose={() => setMovementModalOpen(false)}
+        part={part}
+      />
+    </>
   );
 }

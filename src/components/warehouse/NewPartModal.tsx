@@ -1,200 +1,233 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, X, Save, Loader2, Calculator } from "lucide-react";
-import { createPart } from "@/app/actions/warehouse";
+import { useState, useTransition } from "react";
+import { useForm, type SubmitHandler, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X, Save, AlertCircle, Plus } from "lucide-react";
+import { createPart } from "@/app/actions/inventory";
+import { partSchema, type PartFormData } from "@/lib/schemas";
 
-const CATEGORIES = [
-  "Olii e Lubrificanti",
-  "Filtri",
-  "Freni",
-  "Sospensioni",
-  "Elettrico",
-  "Motore",
-  "Trasmissione",
-  "Carrozzeria",
-  "Pneumatici",
-  "Varie"
-];
-
+// FIX: Rimosse le props esterne, il componente ora è autonomo
 export default function NewPartModal() {
-  const router = useRouter();
+  // FIX: Gestione stato interna
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  // Stato iniziale del form
-  const [formData, setFormData] = useState({
-    code: "",
-    name: "",
-    category: "",
-    brand: "",
-    location: "",
-    buyPrice: 0,
-    markup: 40, // Default 40% ricarico
-    minStock: 5,
-    maxStock: 20
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(partSchema),
+    defaultValues: {
+      code: "",
+      name: "",
+      category: "",
+      brand: "",
+      location: "",
+      buyPrice: 0,
+      markup: 30,
+      sellPrice: 0,
+      stock: 0,
+      minStock: 2,
+      maxStock: 10,
+    },
   });
 
-  // Calcolo prezzo vendita live
-  const sellPrice = formData.buyPrice * (1 + formData.markup / 100);
+  const buyPrice = useWatch({ control, name: "buyPrice" });
+  const markup = useWatch({ control, name: "markup" });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'category' || name === 'code' || name === 'name' || name === 'brand' || name === 'location' 
-        ? value 
-        : parseFloat(value) || 0
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    // Validazione base
-    if (!formData.code || !formData.name || !formData.category) {
-      setError("Compila i campi obbligatori (*)");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const res = await createPart(formData);
+  const onSubmit: SubmitHandler<PartFormData> = (data) => {
+    setServerError(null);
+    startTransition(async () => {
+      const safeBuyPrice = Number(data.buyPrice) || 0;
+      const safeMarkup = Number(data.markup) || 0;
+      const calculatedSellPrice = safeBuyPrice * (1 + safeMarkup / 100);
       
-      if (res.success) {
-        setIsOpen(false);
-        // Reset form
-        setFormData({
-          code: "", name: "", category: "", brand: "", location: "",
-          buyPrice: 0, markup: 40, minStock: 5, maxStock: 20
-        });
-        router.refresh();
-      } else {
-        const errorMsg = typeof res.error === 'string' ? res.error : "Errore validazione dati";
-        setError(errorMsg);
-      }
-    } catch (err) {
-      // FIX: Utilizziamo la variabile err per il log
-      console.error("Errore salvataggio ricambio:", err);
-      setError("Errore imprevisto durante il salvataggio");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const formData = new FormData();
+      
+      if (data.code) formData.append("code", data.code);
+      if (data.name) formData.append("name", data.name);
+      if (data.category) formData.append("category", data.category);
+      if (data.brand) formData.append("brand", data.brand);
+      if (data.location) formData.append("location", data.location);
+      if (data.supplierCode) formData.append("supplierCode", data.supplierCode);
+      
+      formData.append("buyPrice", safeBuyPrice.toString());
+      formData.append("markup", safeMarkup.toString());
+      formData.append("sellPrice", calculatedSellPrice.toFixed(2));
+      formData.append("stock", "0");
+      formData.append("minStock", (data.minStock || 0).toString());
+      
+      if (data.maxStock) formData.append("maxStock", data.maxStock.toString());
 
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="bg-primary hover:bg-orange-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20"
-      >
-        <Plus size={20} /> Nuovo Prodotto
-      </button>
-    );
-  }
+      const res = await createPart(formData);
+
+      if (res && !res.success && res.message) {
+         setServerError(typeof res.message === 'string' ? res.message : "Errore sconosciuto");
+      } else {
+        setIsOpen(false);
+        reset();
+      }
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
-        <div className="p-6 border-b border-white/5 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-white">Nuovo Ricambio</h2>
-            <p className="text-slate-400 text-sm">Inserisci i dettagli del prodotto</p>
+    <>
+      {/* 1. IL BOTTONE DI APERTURA (Renderizzato direttamente dal componente) */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="bg-primary hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20"
+      >
+        <Plus size={20} />
+        Nuovo Prodotto
+      </button>
+
+      {/* 2. IL MODALE (Visibile solo se isOpen è true) */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-white">Nuovo Ricambio</h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {serverError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 flex items-center gap-3">
+                  <AlertCircle size={20} />
+                  {serverError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Codice *</label>
+                    <input
+                      {...register("code")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      placeholder="COD-123"
+                    />
+                    {errors.code && <p className="text-red-400 text-xs mt-1">{errors.code.message as string}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Nome *</label>
+                    <input
+                      {...register("name")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      placeholder="Filtro Olio"
+                    />
+                    {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message as string}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Categoria *</label>
+                    <input
+                      {...register("category")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      placeholder="Motore"
+                    />
+                    {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category.message as string}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Marca</label>
+                    <input
+                      {...register("brand")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      placeholder="Bosch"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Posizione (Scaffale)</label>
+                    <input
+                      {...register("location")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      placeholder="A-12"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 my-4"></div>
+                <h3 className="text-white font-bold mb-3">Prezzi e Stock</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Prezzo Acquisto (€)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      {...register("buyPrice")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Ricarico (%)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      {...register("markup")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Prezzo Vendita (Calc)</label>
+                    <div className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-gray-400 cursor-not-allowed">
+                      € {((Number(buyPrice) || 0) * (1 + (Number(markup) || 0) / 100)).toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Scorta Minima</label>
+                    <input
+                      type="number"
+                      {...register("minStock")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Scorta Massima</label>
+                    <input
+                      type="number"
+                      {...register("maxStock")}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="px-6 py-3 rounded-xl text-gray-400 hover:bg-white/5 transition-colors"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="bg-primary hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-900/20 disabled:opacity-50"
+                  >
+                    {isPending ? "Salvataggio..." : <><Save size={20} /> Salva Ricambio</>}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white p-2 bg-white/5 rounded-full hover:bg-white/10 transition-all">
-            <X size={20} />
-          </button>
         </div>
-
-        {/* Form Body - Scrollable */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-slate-700">
-          
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-sm font-bold">
-              {error}
-            </div>
-          )}
-
-          {/* Sezione 1: Info Generali */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Codice *</label>
-              <input name="code" value={formData.code} onChange={handleChange} placeholder="Es. OIL-5W30" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" autoFocus />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Nome Ricambio *</label>
-              <input name="name" value={formData.name} onChange={handleChange} placeholder="Es. Olio Castrol Edge" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Categoria *</label>
-              <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none appearance-none">
-                <option value="">-- Seleziona --</option>
-                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Marca</label>
-              <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Es. Castrol" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-          </div>
-
-          <hr className="border-white/5" />
-
-          {/* Sezione 2: Economica */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Prezzo Acquisto (€)</label>
-              <input type="number" step="0.01" name="buyPrice" value={formData.buyPrice} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Ricarico (%)</label>
-              <input type="number" step="1" name="markup" value={formData.markup} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col justify-center">
-              <span className="text-xs uppercase font-bold text-emerald-500 flex items-center gap-1">
-                <Calculator size={12} /> Prezzo Vendita
-              </span>
-              <span className="text-xl font-bold text-white">€ {sellPrice.toFixed(2)}</span>
-            </div>
-          </div>
-
-          <hr className="border-white/5" />
-
-          {/* Sezione 3: Logistica */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Scorta Minima</label>
-              <input type="number" name="minStock" value={formData.minStock} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Scorta Massima</label>
-              <input type="number" name="maxStock" value={formData.maxStock} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-            <div>
-              <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Ubicazione</label>
-              <input name="location" value={formData.location} onChange={handleChange} placeholder="Es. A1-04" className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white focus:border-orange-500 outline-none" />
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="pt-4 flex gap-3">
-            <button type="button" onClick={() => setIsOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-all">
-              Annulla
-            </button>
-            <button type="submit" disabled={isLoading} className="flex-1 bg-primary hover:bg-orange-600 text-white py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-              {isLoading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
-              Salva Prodotto
-            </button>
-          </div>
-
-        </form>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

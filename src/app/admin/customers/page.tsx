@@ -53,6 +53,7 @@ export default async function CustomersPage({
             className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-primary/30 p-6 rounded-2xl transition-all duration-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
           >
             <div className="flex items-center gap-4">
+              {/* FIX: Aggiornato a bg-linear-to-br per Tailwind v4 */}
               <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center border border-white/10 text-gray-400 group-hover:text-primary transition-colors">
                 <User size={24} />
               </div>
@@ -82,7 +83,6 @@ export default async function CustomersPage({
               </div>
               <div className="text-right">
                 <span className="text-xs uppercase tracking-widest text-gray-500 block">Totale Speso</span>
-                {/* Gestione sicura se totalSpent è null */}
                 <span className="text-lg font-mono font-bold text-green-400">€ {(c.totalSpent || 0).toFixed(2)}</span>
               </div>
             </div>

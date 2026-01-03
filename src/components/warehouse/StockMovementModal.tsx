@@ -1,140 +1,151 @@
 "use client";
 
-import { useState } from "react";
-import { Part, MovementType } from "@prisma/client";
-import { createStockMovement } from "@/app/actions/warehouse";
-import { Plus, Minus, Loader2, Save } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { X, Save, ArrowRightLeft, AlertCircle } from "lucide-react";
+import { updateStock } from "@/app/actions/inventory";
 import { useRouter } from "next/navigation";
 
-interface Props {
-  part: Part;
-  type: 'IN' | 'OUT';
-  userId: string;
+interface PartBasic {
+  id: string;
+  name: string;
+  stock: number;
+  code: string;
 }
 
-export default function StockMovementModal({ part, type, userId }: Props) {
+interface StockMovementModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  part: PartBasic | null;
+}
+
+interface MovementFormData {
+  quantity: number;
+  type: "IN" | "OUT" | "ADJUSTMENT";
+  reason: string;
+}
+
+export default function StockMovementModal({ isOpen, onClose, part }: StockMovementModalProps) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [qty, setQty] = useState(1);
-  const [reason, setReason] = useState("");
-  const [notes, setNotes] = useState("");
+  const [isPending, startTransition] = useTransition();
+  // FIX: Usiamo useState per gestire l'errore visivamente invece dell'alert
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    // @ts-ignore - Ignoriamo temporaneamente errori di tipo stretto su prisma client non generato
-    const res = await createStockMovement({
-      partId: part.id,
-      type: type as MovementType,
-      quantity: qty,
-      reason,
-      notes,
-      performedById: userId
-    });
-
-    setIsLoading(false);
-    if (res.success) {
-      setIsOpen(false);
-      setQty(1);
-      setReason("");
-      setNotes("");
-      router.refresh();
-    } else {
-      alert("Errore: " + res.error);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<MovementFormData>({
+    defaultValues: {
+      quantity: 1,
+      type: "IN",
+      reason: ""
     }
+  });
+
+  if (!isOpen || !part) return null;
+
+  const onSubmit = (data: MovementFormData) => {
+    setServerError(null); // Resetta errori precedenti
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("partId", part.id);
+      
+      let finalQuantity = data.quantity;
+      if (data.type === "OUT") {
+        finalQuantity = -Math.abs(data.quantity);
+      }
+
+      formData.append("quantity", finalQuantity.toString());
+      formData.append("type", data.type);
+      formData.append("reason", data.reason);
+
+      const res = await updateStock(formData, "SYSTEM_USER");
+
+      if (res && res.success) {
+        reset();
+        onClose();
+        router.refresh();
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errorMsg = (res as any)?.error || (res as any)?.message || "Errore durante il movimento";
+        const displayMsg = typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg;
+        
+        // FIX: Salviamo l'errore nello stato
+        setServerError(displayMsg);
+      }
+    });
   };
 
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => setIsOpen(true)}
-        className={`flex-1 py-2 px-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-          type === 'IN' 
-            ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white' 
-            : 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white'
-        }`}
-      >
-        {type === 'IN' ? <Plus size={16} /> : <Minus size={16} />}
-        {type === 'IN' ? 'Carico' : 'Scarico'}
-      </button>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-        <h3 className="text-xl font-bold text-white mb-1">
-          {type === 'IN' ? 'Carico Merce' : 'Scarico Merce'}
-        </h3>
-        <p className="text-slate-400 text-sm mb-6">{part.code} • {part.name}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md">
+        <div className="flex justify-between items-center p-4 border-b border-white/10">
+          <h3 className="text-white font-bold flex items-center gap-2">
+            <ArrowRightLeft className="text-primary" size={20} />
+            Movimento Magazzino
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+          
+          {/* FIX: Mostriamo l'errore server se presente */}
+          {serverError && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
+              {serverError}
+            </div>
+          )}
+
+          <div className="bg-slate-800/50 p-3 rounded-lg border border-white/5 mb-4">
+            <p className="text-xs text-gray-400">Articolo</p>
+            <p className="text-white font-bold">{part.name}</p>
+            <p className="text-xs text-gray-500">{part.code} • Attuali: {part.stock} pz</p>
+          </div>
+
           <div>
-            <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Quantità</label>
+            <label className="block text-sm text-gray-400 mb-1">Tipo Movimento</label>
+            <select 
+              {...register("type")}
+              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+            >
+              <option value="IN">Carico (+)</option>
+              <option value="OUT">Scarico (-)</option>
+              <option value="ADJUSTMENT">Rettifica / Inventario</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Quantità</label>
             <input 
               type="number" 
-              min="1" 
-              value={qty} 
-              onChange={(e) => setQty(parseInt(e.target.value))}
-              className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white text-lg font-mono" 
+              step="1"
+              min="1"
+              {...register("quantity", { valueAsNumber: true, min: { value: 1, message: "Minimo 1" } })}
+              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+            />
+            {/* FIX: Mostriamo errori di validazione del campo */}
+            {errors.quantity && <p className="text-red-400 text-xs mt-1">{errors.quantity.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Causale / Note</label>
+            <input 
+              {...register("reason")}
+              placeholder="Es. Acquisto fornitore, Rottura, etc."
+              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
             />
           </div>
 
-          <div>
-            <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Motivazione</label>
-            <select 
-              value={reason} 
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white"
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-primary hover:bg-orange-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
-              <option value="">-- Seleziona --</option>
-              {type === 'IN' ? (
-                <>
-                  <option value="ACQUISTO">Acquisto Fornitore</option>
-                  <option value="RESO_CLIENTE">Reso da Cliente</option>
-                  <option value="RETTIFICA">Rettifica Inventario (+)</option>
-                </>
-              ) : (
-                 <>
-                  <option value="VENDITA">Vendita al Banco</option>
-                  <option value="LAVORO">Utilizzo in Lavoro</option>
-                  <option value="SCARTO">Danneggiato / Scaduto</option>
-                  <option value="RETTIFICA">Rettifica Inventario (-)</option>
-                </>
-              )}
-            </select>
+              {isPending ? "Salvataggio..." : <><Save size={18} /> Registra Movimento</>}
+            </button>
           </div>
-          
-          <div>
-             <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Note</label>
-             <textarea 
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white h-20"
-                placeholder="Dettagli opzionali..."
-             />
-          </div>
-        </div>
-
-        <div className="flex gap-3 mt-8">
-          <button 
-            onClick={() => setIsOpen(false)}
-            className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-all"
-          >
-            Annulla
-          </button>
-          <button 
-            onClick={handleSubmit}
-            disabled={isLoading || qty <= 0}
-            className={`flex-1 py-3 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
-               type === 'IN' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'
-            }`}
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : <Save size={18} />}
-            Conferma
-          </button>
-        </div>
+        </form>
       </div>
     </div>
   );

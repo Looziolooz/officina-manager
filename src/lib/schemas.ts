@@ -1,37 +1,23 @@
 import { z } from "zod";
-// FIX: Aggiunti gli Enum mancanti
 import { MovementType, PaymentMethod, ExpenseCategory } from "@prisma/client";
 
-// --- WAREHOUSE SCHEMAS ---
+// --- AUTH SCHEMAS ---
 
-export const partSchema = z.object({
-  code: z.string().min(3, "Codice troppo corto"),
-  name: z.string().min(3, "Nome obbligatorio"),
-  category: z.string().min(1, "Categoria obbligatoria"),
-  brand: z.string().optional(),
-  location: z.string().optional(),
-  buyPrice: z.coerce.number().min(0),
-  markup: z.coerce.number().min(0),
-  minStock: z.coerce.number().min(0),
-  maxStock: z.coerce.number().optional(),
+export const loginSchema = z.object({
+  email: z.string().email("Inserisci un'email valida"),
+  password: z.string().min(1, "La password è richiesta"),
+  code: z.string().optional(), // 2FA Code
 });
 
-export const movementSchema = z.object({
-  partId: z.string(),
-  type: z.nativeEnum(MovementType),
-  quantity: z.coerce.number().positive("La quantità deve essere positiva"),
-  documentNumber: z.string().optional(),
-  notes: z.string().optional(),
-  reason: z.string().optional(),
-});
+export type LoginFormData = z.infer<typeof loginSchema>;
 
-export type PartFormData = z.infer<typeof partSchema>;
-export type MovementFormData = z.infer<typeof movementSchema>;
 
 // --- CUSTOMER SCHEMAS ---
 
-// Schema base per la creazione (Cliente + Veicolo)
+// Schema COMPLETO per la creazione (Cliente + Veicolo)
+// Include Anagrafica, Fiscali, Note e Veicolo iniziale
 export const customerSchema = z.object({
+  // Anagrafica
   firstName: z.string().min(2, "Nome richiesto"),
   lastName: z.string().min(2, "Cognome richiesto"),
   email: z.string().email("Email non valida").optional().or(z.literal("")),
@@ -39,6 +25,20 @@ export const customerSchema = z.object({
   alternatePhone: z.string().optional(),
   address: z.string().optional(),
   
+  // Dati Fiscali
+  companyName: z.string().optional(),
+  vatNumber: z.string().optional(),
+  fiscalCode: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  province: z.string().optional(),
+  pec: z.string().optional(),
+  sdiCode: z.string().optional(),
+
+  // Note (Fondamentali per il form di creazione)
+  technicalNotes: z.string().optional(),
+  familyNotes: z.string().optional(),
+
   // Dati Veicolo Iniziale
   plate: z.string().min(4, "Targa richiesta").toUpperCase(),
   brand: z.string().min(2, "Marca richiesta"),
@@ -51,7 +51,7 @@ export const customerSchema = z.object({
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
 
-// Schema per la modifica del SOLO cliente
+// Schema per la modifica del SOLO profilo cliente (senza veicolo obbligatorio)
 export const customerEditSchema = z.object({
   firstName: z.string().min(2, "Nome richiesto"),
   lastName: z.string().min(2, "Cognome richiesto"),
@@ -59,13 +59,55 @@ export const customerEditSchema = z.object({
   phone: z.string().min(6, "Telefono richiesto"),
   alternatePhone: z.string().optional(),
   address: z.string().optional(),
+  
+  // Fiscali
+  companyName: z.string().optional(),
+  vatNumber: z.string().optional(),
+  fiscalCode: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  province: z.string().optional(),
+  pec: z.string().optional(),
+  sdiCode: z.string().optional(),
+  
+  // Le note sono gestite separatamente nell'editor, ma opzionali qui per sicurezza
   technicalNotes: z.string().optional(),
   familyNotes: z.string().optional(),
 });
 
-
-
 export type CustomerEditData = z.infer<typeof customerEditSchema>;
+
+
+// --- WAREHOUSE SCHEMAS ---
+
+export const partSchema = z.object({
+  code: z.string().min(3, "Codice troppo corto"),
+  name: z.string().min(3, "Nome obbligatorio"),
+  category: z.string().min(1, "Categoria obbligatoria"),
+  brand: z.string().optional(),
+  location: z.string().optional(),
+  buyPrice: z.coerce.number().min(0),
+  sellPrice: z.coerce.number().default(0), // Modificato per permettere 0 se non deciso
+  markup: z.coerce.number().min(0).default(30),
+  stock: z.coerce.number().int().min(0),
+  minStock: z.coerce.number().min(0),
+  maxStock: z.coerce.number().optional(),
+  supplierCode: z.string().optional(),
+});
+
+export const movementSchema = z.object({
+  partId: z.string(),
+  type: z.nativeEnum(MovementType),
+  quantity: z.coerce.number().int().positive("La quantità deve essere positiva"),
+  documentNumber: z.string().optional(),
+  notes: z.string().optional(),
+  reason: z.string().optional(),
+  jobId: z.string().optional(),
+});
+
+export type PartFormData = z.infer<typeof partSchema>;
+export type MovementFormData = z.infer<typeof movementSchema>;
+
 
 // --- ACCOUNTING SCHEMAS ---
 

@@ -1,120 +1,101 @@
 import { prisma } from "@/lib/db";
 import PartCard from "@/components/warehouse/PartCard";
-import NewPartModal from "@/components/warehouse/NewPartModal"; 
-import { Package, AlertCircle, TrendingUp } from "lucide-react";
+import NewPartModal from "@/components/warehouse/NewPartModal";
+import { Package, Search, Filter, AlertTriangle } from "lucide-react";
 
-// Nota: Sostituisci con l'ID reale della sessione utente in produzione
-const CURRENT_USER_ID = "user_demo_id"; 
+export const dynamic = "force-dynamic"; // Assicura che i dati siano sempre freschi
 
 export default async function WarehousePage() {
-  const [parts, alerts] = await Promise.all([
-    prisma.part.findMany({
-      orderBy: { stockLevel: 'asc' }, 
-    }),
-    prisma.stockAlert.findMany({
-      where: { isRead: false },
-      include: { part: true },
-      take: 5
-    })
-  ]);
+  // 1. Recupera i ricambi dal DB
+  const parts = await prisma.part.findMany({
+    orderBy: { updatedAt: "desc" },
+  });
 
-  const totalValue = parts.reduce((acc: number, p) => acc + p.totalValue, 0);
-  const criticalCount = parts.filter(p => p.stockLevel === 'CRITICAL').length;
+  // 2. Calcola KPI rapidi
+  const lowStockCount = parts.filter((p) => p.stock <= p.minStock).length;
+  const totalValue = parts.reduce((acc, p) => acc + (p.stock * p.buyPrice), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      {/* --- HEADER PRINCIPALE --- */}
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 p-6">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter uppercase flex items-center gap-3">
-            <Package className="text-orange-500" /> Magazzino
-          </h1>
-          <p className="text-gray-400 text-sm">Gestione scorte e inventario</p>
+          <h1 className="text-3xl font-bold text-white tracking-tighter">Magazzino</h1>
+          <p className="text-gray-400 text-sm">Gestione ricambi, giacenze e ordini</p>
         </div>
-        {/* BOTTONE NUOVO PRODOTTO */}
+        
+        {/* FIX: NewPartModal è ora autonomo e include il suo bottone */}
         <NewPartModal />
       </div>
 
       {/* KPI CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-linear-to-br from-slate-900 to-slate-950 border border-white/10 p-6 rounded-3xl">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 text-blue-400 rounded-2xl">
-              <Package size={24} />
-            </div>
-            <div>
-              <p className="text-slate-400 text-sm uppercase font-bold">Totale Referenze</p>
-              <h2 className="text-3xl font-bold text-white">{parts.length}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Totale Articoli</h3>
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+              <Package size={20} />
             </div>
           </div>
+          <p className="text-3xl font-bold text-white">{parts.length}</p>
         </div>
 
-        <div className="bg-linear-to-br from-slate-900 to-slate-950 border border-white/10 p-6 rounded-3xl">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl">
-              <TrendingUp size={24} />
-            </div>
-            <div>
-              <p className="text-slate-400 text-sm uppercase font-bold">Valore Magazzino</p>
-              <h2 className="text-3xl font-bold text-white font-mono">
-                € {totalValue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h2>
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Valore Totale</h3>
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+              <span className="font-bold text-lg">€</span>
             </div>
           </div>
+          <p className="text-3xl font-bold text-white">
+            {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(totalValue)}
+          </p>
         </div>
 
-        <div className="bg-linear-to-br from-slate-900 to-slate-950 border border-white/10 p-6 rounded-3xl">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-red-500/10 text-red-400 rounded-2xl">
-              <AlertCircle size={24} />
-            </div>
-            <div>
-              <p className="text-slate-400 text-sm uppercase font-bold">Scorte Critiche</p>
-              <h2 className="text-3xl font-bold text-white">{criticalCount}</h2>
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-400 font-medium">Sotto Scorta</h3>
+            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">
+              <AlertTriangle size={20} />
             </div>
           </div>
+          <p className={`text-3xl font-bold ${lowStockCount > 0 ? 'text-red-400' : 'text-white'}`}>
+            {lowStockCount}
+          </p>
         </div>
       </div>
 
-      {/* Alert Section */}
-      {alerts.length > 0 && (
-        <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4">
-          <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2">
-            <AlertCircle size={18} /> Alert Attivi
-          </h3>
-          <div className="space-y-2">
-            {alerts.map((alert) => (
-              <div key={alert.id} className="flex justify-between items-center bg-slate-950/50 p-3 rounded-xl border border-white/5">
-                <span className="text-white text-sm">
-                  <strong>{alert.part.code}</strong>: {alert.message}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {new Date(alert.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* FILTRI (UI Placeholder per ora) */}
+      <div className="flex gap-4 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input 
+            type="text" 
+            placeholder="Cerca per codice, nome o marca..." 
+            className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:border-primary outline-none transition-colors"
+          />
+        </div>
+        <button className="bg-slate-900 border border-white/10 hover:border-primary text-gray-300 px-4 rounded-xl flex items-center gap-2 transition-colors">
+          <Filter size={20} />
+          <span className="hidden md:inline">Filtri</span>
+        </button>
+      </div>
+
+      {/* GRID DEI PRODOTTI */}
+      {parts.length === 0 ? (
+        <div className="text-center py-20 bg-slate-900/30 rounded-3xl border border-white/5 border-dashed">
+          <Package size={48} className="mx-auto text-gray-600 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">Magazzino Vuoto</h3>
+          <p className="text-gray-400">Inizia aggiungendo il primo ricambio al sistema.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {parts.map((part) => (
+            // FIX: Rimosso userId che non è più richiesto dal componente
+            <PartCard key={part.id} part={part} />
+          ))}
         </div>
       )}
-
-      {/* Grid Ricambi */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-6">Inventario</h2>
-        {parts.length === 0 ? (
-          <div className="text-center py-20 text-slate-500 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center gap-4">
-            <Package size={48} className="opacity-20" />
-            <p>Il magazzino è vuoto.</p>
-            {/* FIX: Usato &quot; invece delle virgolette dirette */}
-            <p className="text-sm">Clicca &quot;Nuovo Prodotto&quot; in alto a destra per iniziare.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {parts.map((part) => (
-              <PartCard key={part.id} part={part} userId={CURRENT_USER_ID} />
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

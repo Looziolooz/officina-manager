@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Configurazione Viewport (Separata)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
+};
+
 // Metadata SEO
 export const metadata: Metadata = {
   title: "GT Service | Officina Meccanotronica Giovanni Tambuscio Jonadi (VV)",
@@ -31,7 +38,6 @@ export const metadata: Metadata = {
     "manutenzione auto VV",
   ],
   authors: [{ name: "Giovanni Tambuscio" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   openGraph: {
     title: "GT Service - Officina Meccanotronica a Jonadi",
