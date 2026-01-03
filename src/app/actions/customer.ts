@@ -1,71 +1,19 @@
 "use server";
 
-import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
-// --- SCHEMI DI VALIDAZIONE ---
-
-// Schema per la creazione completa (Cliente + Veicolo)
-const customerCreateSchema = z.object({
-  firstName: z.string().min(2, "Nome richiesto"),
-  lastName: z.string().min(2, "Cognome richiesto"),
-  phone: z.string().min(6, "Telefono richiesto"),
-  email: z.string().email("Email non valida").optional().or(z.literal("")),
-  alternatePhone: z.string().optional(),
-  address: z.string().optional(),
-  
-  // Dati Fiscali
-  companyName: z.string().optional(),
-  vatNumber: z.string().optional(),
-  fiscalCode: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  province: z.string().optional(),
-  pec: z.string().optional(),
-  sdiCode: z.string().optional(),
-
-  // Note
-  technicalNotes: z.string().optional(),
-  familyNotes: z.string().optional(),
-
-  // Veicolo
-  plate: z.string().min(4, "Targa richiesta").toUpperCase(),
-  brand: z.string().min(2, "Marca richiesta"),
-  model: z.string().min(2, "Modello richiesto"),
-  year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1),
-  vin: z.string().optional(),
-  fuelType: z.string().optional(),
-  engineSize: z.string().optional(),
-});
-
-// Schema per l'aggiornamento del solo profilo cliente
-const customerUpdateSchema = z.object({
-  firstName: z.string().min(2, "Nome richiesto"),
-  lastName: z.string().min(2, "Cognome richiesto"),
-  phone: z.string().min(6, "Telefono richiesto"),
-  email: z.string().email("Email non valida").optional().or(z.literal("")),
-  alternatePhone: z.string().optional(),
-  address: z.string().optional(),
-  
-  companyName: z.string().optional(),
-  vatNumber: z.string().optional(),
-  fiscalCode: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  province: z.string().optional(),
-  pec: z.string().optional(),
-  sdiCode: z.string().optional(),
-});
-
+// FIX: Importiamo gli schemi centralizzati invece di ridefinirli qui
+import { customerSchema, customerEditSchema } from "@/lib/schemas"; 
 
 // --- ACTIONS ---
 
-// 1. CREAZIONE CLIENTE + VEICOLO (Rinominata come richiesto dalla UI)
+// 1. CREAZIONE CLIENTE + VEICOLO
 export async function createCustomerWithVehicle(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
-  const result = customerCreateSchema.safeParse(rawData);
+  
+  // FIX: Usiamo lo schema importato
+  const result = customerSchema.safeParse(rawData);
 
   if (!result.success) {
     return {
@@ -99,7 +47,7 @@ export async function createCustomerWithVehicle(formData: FormData) {
         province: data.province,
         pec: data.pec,
         sdiCode: data.sdiCode,
-        technicalNotes: data.technicalNotes,
+        technicalNotes: data.technicalNotes, // Ora TypeScript riconoscerà questo campo
         familyNotes: data.familyNotes,
         vehicles: {
           create: {
@@ -123,7 +71,7 @@ export async function createCustomerWithVehicle(formData: FormData) {
   redirect("/admin/customers");
 }
 
-// 2. AGGIORNAMENTO NOTE (Richiesto da NoteEditor.tsx)
+// 2. AGGIORNAMENTO NOTE
 export async function updateCustomerNotes(
   customerId: string, 
   technicalNotes: string, 
@@ -142,10 +90,11 @@ export async function updateCustomerNotes(
   }
 }
 
-// 3. AGGIORNAMENTO PROFILO (Richiesto da EditCustomerForm.tsx)
+// 3. AGGIORNAMENTO PROFILO
 export async function updateCustomerProfile(customerId: string, formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
-  const result = customerUpdateSchema.safeParse(rawData);
+  // FIX: Usiamo lo schema importato (customerEditSchema)
+  const result = customerEditSchema.safeParse(rawData);
 
   if (!result.success) {
     return { success: false, error: result.error.flatten().fieldErrors };
