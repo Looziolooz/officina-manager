@@ -1,37 +1,39 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs"; // Importa bcryptjs
 
 const prisma = new PrismaClient();
 
 async function main() {
   const email = 'giovanni@gtservice.it';
-  const password = 'GTService2025!'; // Password in chiaro per ora
-
+  const passwordPlain = 'GTService2025!'; 
+  
   console.log(`🔄 Avvio reset utente: ${email}...`);
 
-  // 1. Rimuovi l'utente se esiste (pulizia radicale)
+  // Genera l'hash della password
+  const hashedPassword = await bcrypt.hash(passwordPlain, 12);
+
+  // 1. Rimuovi l'utente se esiste
   try {
     await prisma.user.delete({ where: { email } });
     console.log('🗑️  Utente precedente eliminato.');
   } catch {
-    // Rimosso 'e' perché non utilizzato. Ignoriamo se l'utente non esiste.
     console.log('ℹ️  L\'utente non esisteva, procedo alla creazione.');
   }
 
-  // 2. Crea l'utente con TUTTI i flag di sicurezza impostati correttamente
+  // 2. Crea l'utente con password CRIPTATA
   const user = await prisma.user.create({
     data: {
       email,
       name: 'Giovanni Admin',
-      password: password, 
+      password: hashedPassword, // Usa l'hash, NON la password in chiaro
       role: 'SUPER_ADMIN',
       
-      // Security Flags espliciti (IMPORTANTE)
       isActive: true,
       isLocked: false,
       lockedUntil: null,
       loginAttempts: 0,
       mustChangePassword: false,
-      twoFactorEnabled: false, // Disabilitiamo 2FA per il primo accesso
+      twoFactorEnabled: false,
       twoFactorSecret: null,
     },
   });
@@ -39,9 +41,8 @@ async function main() {
   console.log('✅ Utente Admin ricreato con successo!');
   console.log('------------------------------------------------');
   console.log(`📧 Email:    ${user.email}`);
-  console.log(`🔑 Password: ${user.password}`);
+  console.log(`🔑 Password: ${passwordPlain}`); // Mostra quella in chiaro solo nel log per comodità
   console.log(`🛡️  Ruolo:    ${user.role}`);
-  console.log(`🔓 Stato:    Sbloccato, 2FA Disabilitato`);
   console.log('------------------------------------------------');
 }
 
