@@ -5,29 +5,29 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const password = await bcrypt.hash('GTService2025!', 12);
+  console.log("🔓 Sblocco account admin e reset password in corso...");
   
-  // Rimosso l'assegnamento alla variabile 'user' inutilizzata
-  await prisma.user.upsert({
+  const password = await bcrypt.hash('GTService2025!', 12);
+
+  // Usiamo update per forzare lo sblocco su un utente esistente
+  await prisma.user.update({
     where: { email: 'giovanni@gtservice.it' },
-    update: { 
-      password: password,
-      role: 'SUPER_ADMIN' 
-    },
-    create: {
-      email: 'giovanni@gtservice.it',
-      name: 'Giovanni Tambuscio',
+    data: {
       password: password,
       role: 'SUPER_ADMIN',
+      isLocked: false,       // <--- IMPORTANTE: Sblocca l'utente
+      lockedUntil: null,     // <--- IMPORTANTE: Rimuove il timeout
+      loginAttempts: 0,      // <--- IMPORTANTE: Resetta i tentativi
+      emailVerified: new Date() // Opzionale: conferma l'email se richiesto
     },
   });
   
-  console.log('✅ Utente Giovanni creato o aggiornato con successo nel database!');
+  console.log("✅ Account SBLOCCATO e password ripristinata con successo!");
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Errore durante il fix:', e);
+    console.error("❌ Errore:", e);
     process.exit(1);
   })
   .finally(async () => {
