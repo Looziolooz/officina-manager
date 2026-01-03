@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { code, name, buyPrice, sellPrice, stock, minStock } = body;
 
-    // Validazione semplice
     if (!code || !name) {
       return NextResponse.json(
         { error: "Codice e Nome sono obbligatori" },
@@ -29,11 +29,14 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error("ERRORE MAGAZZINO:", error);
     
-    if (error instanceof Error && 'code' in error && error.code === 'P2002') {
-      return NextResponse.json(
-        { error: "Un articolo con questo codice esiste già" },
-        { status: 400 }
-      );
+    // FIX: Controllo sicuro per l'errore Prisma P2002 (Unique constraint)
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { error: "Un articolo con questo codice esiste già" },
+          { status: 400 }
+        );
+      }
     }
 
     return NextResponse.json(

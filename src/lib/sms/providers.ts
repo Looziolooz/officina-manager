@@ -40,8 +40,7 @@ export class TwilioProvider implements SMSProvider {
 
       return { success: true, messageId: result.sid };
     } catch (error: unknown) {
-      // FIX: Sostituito 'any' con 'unknown' e controllo di tipo
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown Twilio error";
       console.error("Twilio Error:", errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -50,18 +49,20 @@ export class TwilioProvider implements SMSProvider {
 
 // --- IMPLEMENTAZIONE VONAGE ---
 export class VonageProvider implements SMSProvider {
+  private vonage: Vonage;
+
+  constructor() {
+    this.vonage = new Vonage({
+      apiKey: process.env.VONAGE_API_KEY || "",
+      apiSecret: process.env.VONAGE_API_SECRET || ""
+    });
+  }
+
   async send(to: string, message: string): Promise<SMSResult> {
     try {
-      // FIX: Rimosso il cast 'as any' che ESLint non gradiva. 
-      // Se Vonage è installato correttamente, i tipi dovrebbero coincidere.
-      const vonage = new Vonage({
-        apiKey: process.env.VONAGE_API_KEY || "",
-        apiSecret: process.env.VONAGE_API_SECRET || ""
-      });
-
       const from = "Officina";
       
-      await vonage.sms.send({
+      await this.vonage.sms.send({
         to,
         from,
         text: message
@@ -69,8 +70,7 @@ export class VonageProvider implements SMSProvider {
 
       return { success: true };
     } catch (error: unknown) {
-      // FIX: Sostituito 'any' con 'unknown' e controllo di tipo
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown Vonage error";
       console.error("Vonage Error:", errorMessage);
       return { success: false, error: errorMessage };
     }
