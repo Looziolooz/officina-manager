@@ -1,0 +1,575 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// --- ENUMS ---
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  MECHANIC
+  RECEPTIONIST
+  VIEWER
+}
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  PASSWORD_CHANGED
+  TWO_FA_ENABLED
+  TWO_FA_DISABLED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  // Business
+  CUSTOMER_CREATED
+  JOB_CREATED
+  INVOICE_CREATED
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  WAITING_PARTS
+  COMPLETED
+  DELIVERED
+  CANCELLED // Aggiunto per completezza
+  PENDING   // Aggiunto per compatibilità con il codice esistente
+}
+
+enum MaintenanceType {
+  OIL_CHANGE
+  BRAKE_SERVICE
+  TIRE_ROTATION
+  GENERAL_INSPECTION
+  ENGINE_REPAIR
+  TRANSMISSION
+  ELECTRICAL
+  BODYWORK
+  OTHER
+}
+
+// Magazzino
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  RETURN
+  TRANSFER
+}
+
+enum StockLevel {
+  CRITICAL
+  LOW
+  NORMAL
+  HIGH
+}
+
+// Contabilità
+enum AccountingType {
+  INCOME
+  EXPENSE
+  ADJUSTMENT
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  CHECK
+  PAYPAL
+  SATISPAY
+  OTHER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  RENT
+  UTILITIES
+  INSURANCE
+  SALARIES
+  TAXES
+  PARTS_PURCHASE
+  EQUIPMENT
+  MAINTENANCE
+  FUEL
+  MARKETING
+  SERVICES
+  OTHER
+}
+
+// SMS
+enum SMSProvider {
+  TWILIO
+  VONAGE
+  MESSAGEBIRD
+  MANUAL
+}
+
+enum SMSStatus {
+  PENDING
+  SENDING
+  SENT
+  DELIVERED
+  FAILED
+  REJECTED
+  QUEUED
+}
+
+enum SMSType {
+  OIL_CHANGE_REMINDER
+  INSPECTION_REMINDER
+  CAR_READY
+  APPOINTMENT_CONFIRM
+  QUOTE_READY
+  PAYMENT_REMINDER
+  MARKETING
+  CUSTOM
+}
+
+// --- CORE MODELS ---
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  password         String    
+  role             Role      @default(VIEWER)
+  
+  // Account Status
+  isActive         Boolean   @default(true)
+  isLocked         Boolean   @default(false)
+  lockedUntil      DateTime?
+  
+  // Login Tracking
+  loginAttempts    Int       @default(0)
+  lastLoginAttempt DateTime?
+  lastLoginSuccess DateTime?
+  lastLoginIP      String?
+  
+  // Password Policy
+  passwordChangedAt DateTime  @default(now())
+  mustChangePassword Boolean  @default(false)
+  
+  // 2FA
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?   
+  
+  // Backup Codes
+  backupCodes       TwoFactorBackupCode[]
+
+  // Relazioni Officina
+  assignedJobs      Job[]     
+  jobNotes          JobNote[]
+  stockMovements    StockMovement[] 
+  
+  // Security Relazioni
+  auditLogs         AuditLog[]
+  sessions          Session[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  ipAddress    String?
+  userAgent    String?  @db.Text
+  
+  createdAt    DateTime @default(now())
+}
+
+model TwoFactorBackupCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   // Hashed
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userEmail      String?     
+  userName       String?     
+  userRole       Role?       
+  
+  action         AuditAction
+  resource       String?     
+  resourceId     String?     
+  
+  description    String      @db.Text
+  metadata       Json?       
+  
+  ipAddress      String?
+  userAgent      String?     @db.Text
+  
+  isSuccess      Boolean     @default(true)
+  riskLevel      String?     @default("LOW") 
+  
+  createdAt      DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Customer {
+  id             String    @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String?   @unique
+  phone          String    @unique
+  alternatePhone String?
+  address        String?
+  
+  companyName    String?   
+  vatNumber      String?   
+  fiscalCode     String?   
+  city           String?
+  postalCode     String?
+  province       String?
+  country        String    @default("IT")
+  pec            String?
+  sdiCode        String?   
+  
+  technicalNotes String?   @db.Text
+  familyNotes    String?   @db.Text
+  
+  totalSpent     Float     @default(0)
+  totalMargin    Float     @default(0)
+  lastVisit      DateTime?
+
+  smsEnabled         Boolean    @default(true)
+  marketingSMS       Boolean    @default(false)
+  privacyConsent     Boolean    @default(false)
+  privacyConsentDate DateTime?
+
+  vehicles       Vehicle[]
+  invoices       Invoice[]
+  smsMessages    SMSMessage[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([phone])
+  @@index([lastName])
+}
+
+model Vehicle {
+  id             String    @id @default(cuid())
+  plate          String    @unique
+  brand          String
+  modelName      String
+  year           Int
+  vin            String?
+  engineSize     String?
+  fuelType       String?
+  
+  totalKm        Int       @default(0)
+  
+  lastOilChange      Int?
+  lastOilChangeDate  DateTime?
+  lastInspection     DateTime?
+  
+  nextOilChange      Int?
+  nextOilChangeDate  DateTime?
+  nextInspection     DateTime?
+
+  oilChangeReminders  Boolean  @default(true)
+  inspectionReminders Boolean  @default(true)
+
+  ownerId        String
+  owner          Customer  @relation(fields: [ownerId], references: [id])
+  jobs           Job[]
+  smsMessages    SMSMessage[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([plate])
+}
+
+model Job {
+  id                 String           @id @default(cuid())
+  jobNumber          String           @unique
+  title              String
+  description        String?          @db.Text
+  status             JobStatus        @default(SCHEDULED)
+  priority           Int              @default(0)
+
+  scheduledDate      DateTime
+  startedAt          DateTime?
+  completedAt        DateTime?
+  deliveredAt        DateTime?
+  estimatedDuration Int?
+
+  // Relazione Veicolo
+  vehicleId          String
+  vehicle            Vehicle          @relation(fields: [vehicleId], references: [id])
+  
+  // Relazione Cliente (CRUCIALE per il frontend)
+  customerId         String
+  customer           Customer         @relation(fields: [customerId], references: [id])
+
+  kmAtEntry          Int
+  fuelLevel          Int?             @default(0)
+
+  laborHours         Float            @default(0)
+  laborRate          Float            @default(45)
+  laborCost          Float            @default(0)
+  partsCost          Float            @default(0)
+  totalAmount        Float            @default(0)
+  margin             Float            @default(0)
+
+  maintenanceType    MaintenanceType?
+  
+  parts              PartOnJob[]
+  photos             JobPhoto[]
+  notes              JobNote[]
+  
+  assignedToId       String?
+  assignedTo         User?            @relation(fields: [assignedToId], references: [id])
+
+  invoice            Invoice?
+  stockMovements     StockMovement[] 
+  accountingRecords AccountingRecord[] 
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+model InvoiceItem {
+  id                String    @id @default(cuid())
+  invoiceId         String
+  invoice           Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  description       String
+  quantity          Float     @default(1)
+  unitPrice         Float
+  discount          Float     @default(0)
+  vatRate           Float     @default(22)
+  subtotal          Float     
+
+  createdAt         DateTime  @default(now())
+}
+
+model Expense {
+  id                String           @id @default(cuid())
+  expenseNumber     String?          
+  
+  category          ExpenseCategory
+  description       String
+  
+  amount            Float            
+  taxAmount         Float            @default(0)
+  totalAmount       Float
+  
+  expenseDate       DateTime         @default(now())
+  dueDate           DateTime?
+  paidDate          DateTime?
+  
+  isPaid            Boolean          @default(false)
+  paymentMethod     PaymentMethod?
+  
+  supplierName      String
+  supplierVAT       String?
+  
+  accountingRecord  AccountingRecord?
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([category])
+  @@index([expenseDate])
+}
+
+model AccountingRecord {
+  id                String           @id @default(cuid())
+  recordNumber      String           @unique 
+  type              AccountingType
+  
+  date              DateTime         @default(now())
+  
+  amount            Float            
+  totalAmount       Float            
+  
+  category          String
+  description       String
+  
+  invoiceId         String?          @unique
+  invoice           Invoice?         @relation(fields: [invoiceId], references: [id])
+  
+  expenseId         String?          @unique
+  expense           Expense?         @relation(fields: [expenseId], references: [id])
+  
+  jobId             String?
+  job               Job?             @relation(fields: [jobId], references: [id])
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([type])
+  @@index([date])
+}
+
+model SMSMessage {
+  id                String           @id @default(cuid())
+  
+  phoneNumber       String
+  customerId        String?
+  customer          Customer?        @relation(fields: [customerId], references: [id])
+  
+  message           String           @db.Text
+  type              SMSType
+  
+  provider          SMSProvider
+  status            SMSStatus        @default(PENDING)
+  providerMessageId String?
+  
+  attempts          Int              @default(0)
+  maxAttempts       Int              @default(3)
+  lastAttemptAt     DateTime?
+  
+  cost              Float?
+  creditsUsed       Float?
+  
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  
+  errorMessage      String?          @db.Text
+  providerResponse  String?          @db.Text
+  
+  vehicleId         String?
+  vehicle           Vehicle?         @relation(fields: [vehicleId], references: [id])
+  jobId             String?
+  job               Job?             @relation(fields: [jobId], references: [id])
+  
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  @@index([status])
+  @@index([type])
+  @@index([scheduledFor])
+  @@index([customerId])
+}
+
+model SMSProviderConfig {
+  id                String      @id @default(cuid())
+  provider          SMSProvider @unique
+  
+  isEnabled         Boolean     @default(true)
+  priority          Int         @default(1)
+  name              String      
+  
+  dailyLimit        Int         @default(100)
+  messagesSentToday Int         @default(0)
+  costPerSMS        Float       @default(0.08)
+  
+  remainingCredits  Float       @default(0)
+  
+  lastUsedAt        DateTime?
+  successRate       Float       @default(100)
+  totalSent         Int         @default(0)
+  totalFailed       Int         @default(0)
+  
+  lastResetDate     DateTime    @default(now())
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+// --- APPUNTAMENTI ---
+
+enum AppointmentType {
+  DIAGNOSTIC      // "Analisi del problema" — il cliente porta l'auto per capire cosa fare
+  SCHEDULED_WORK  // "Manutenzione programmata" — tagliando, freni, ecc.
+  PICKUP          // Ritiro auto pronta
+  OTHER
+}
+
+enum AppointmentStatus {
+  PLANNED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  startAt         DateTime
+  endAt           DateTime
+  type            AppointmentType   @default(SCHEDULED_WORK)
+  status          AppointmentStatus @default(PLANNED)
+  notes           String?           @db.Text
+
+  // Collegamenti opzionali (l'appuntamento può precedere il job)
+  customerId      String?
+  customer        Customer?         @relation(fields: [customerId], references: [id])
+  vehicleId       String?
+  vehicle         Vehicle?          @relation(fields: [vehicleId], references: [id])
+  jobId           String?           @unique
+  job             Job?              @relation(fields: [jobId], references: [id])
+
+  // Per appuntamenti "rapidi" senza cliente in anagrafica
+  walkInName      String?
+  walkInPhone     String?
+  walkInPlate     String?
+
+  // Reminder
+  reminderDayBeforeSent Boolean      @default(false)
+  reminderDayBeforeSentAt DateTime?
+  reminderSameDaySent   Boolean      @default(false)
+  reminderSameDaySentAt DateTime?
+
+  createdById     String
+  createdBy       User              @relation(fields: [createdById], references: [id])
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([startAt])
+  @@index([status])
+}
+
+// Relazioni inverse
+// Aggiungere in Customer: appointments Appointment[]
+// Aggiungere in Vehicle: appointments Appointment[]
+// Aggiungere in Job: appointment Appointment?
+// Aggiungere in User: appointments Appointment[]

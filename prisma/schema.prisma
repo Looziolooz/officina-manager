@@ -1,0 +1,768 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                 String                @id @default(cuid())
+  email              String                @unique
+  name               String
+  password           String
+  role               Role?                 @default(VIEWER)
+  isActive           Boolean?              @default(true)
+  isLocked           Boolean?              @default(false)
+  lockedUntil        DateTime?
+  loginAttempts      Int?                  @default(0)
+  lastLoginAttempt   DateTime?
+  lastLoginSuccess   DateTime?
+  lastLoginIP        String?
+  passwordChangedAt  DateTime?             @default(now())
+  mustChangePassword Boolean?              @default(false)
+  twoFactorEnabled   Boolean?              @default(false)
+  twoFactorSecret    String?
+  createdAt          DateTime?             @default(now())
+  updatedAt          DateTime?             @updatedAt
+  appointments       Appointment[]
+  auditLogs          AuditLog[]
+  assignedJobs       Job[]
+  jobNotes           JobNote[]
+  quotes             Quote[]
+  smsCampaigns       SMSCampaign[]
+  sessions           Session[]
+  stockMovements     StockMovement[]
+  supplierDeliveries SupplierDelivery[]
+  backupCodes        TwoFactorBackupCode[]
+  wasteRecords       WasteRecord[]
+
+  @@index([email])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  sessionToken String    @unique
+  userId       String
+  expires      DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime? @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+}
+
+model TwoFactorBackupCode {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String
+  used      Boolean? @default(false)
+  usedAt    DateTime?
+  createdAt DateTime? @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?
+  userEmail   String?
+  userName    String?
+  userRole    Role?
+  action      AuditAction
+  resource    String?
+  resourceId  String?
+  description String?
+  metadata    String?   // Store JSON as string for SQLite
+  ipAddress   String?
+  userAgent   String?
+  isSuccess   Boolean? @default(true)
+  riskLevel   String?   @default("LOW")
+  createdAt   DateTime? @default(now())
+  user        User?      @relation(fields: [userId], references: [id], onUpdate: NoAction)
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model Customer {
+  id                 String        @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String?       @unique
+  phone              String        @unique
+  alternatePhone     String?
+  address            String?
+  companyName        String?
+  vatNumber          String?
+  fiscalCode         String?
+  city               String?
+  postalCode         String?
+  province           String?
+  country            String?        @default("IT")
+  pec                String?
+  sdiCode            String?
+  technicalNotes     String?
+  familyNotes        String?
+  totalSpent         Float?         @default(0)
+  totalMargin        Float?         @default(0)
+  lastVisit          DateTime?
+  smsEnabled         Boolean?       @default(true)
+  marketingSMS       Boolean?       @default(false)
+  privacyConsent     Boolean?       @default(false)
+  privacyConsentDate DateTime?
+  createdAt          DateTime?       @default(now())
+  updatedAt          DateTime?       @updatedAt
+  appointments       Appointment[]
+  invoices           Invoice[]
+  jobs               Job[]
+  quotes             Quote[]
+  smsMessages        SMSMessage[]
+  vehicles           Vehicle[]
+
+  @@index([lastName])
+  @@index([phone])
+}
+
+model Vehicle {
+  id                  String     @id @default(cuid())
+  plate               String     @unique
+  brand               String
+  modelName           String
+  year                Int
+  vin                 String?
+  engineSize          String?
+  fuelType            String?
+  totalKm             Int?       @default(0)
+  lastOilChange       Int?
+  lastOilChangeDate   DateTime?
+  lastInspection      DateTime?
+  nextOilChange       Int?
+  nextOilChangeDate   DateTime?
+  nextInspection      DateTime?
+  oilChangeReminders  Boolean?   @default(true)
+  inspectionReminders Boolean?   @default(true)
+  ownerId             String
+  createdAt           DateTime?   @default(now())
+  updatedAt           DateTime?   @updatedAt
+  appointments        Appointment[]
+  jobs                Job[]
+  quotes              Quote[]
+  smsMessages         SMSMessage[]
+  owner               Customer   @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([plate])
+}
+
+model Job {
+  id                 String             @id @default(cuid())
+  jobNumber          String             @unique
+  title              String
+  description        String?
+  status             JobStatus?         @default(SCHEDULED)
+  priority           Int?               @default(0)
+  scheduledDate      DateTime
+  startedAt          DateTime?
+  completedAt        DateTime?
+  deliveredAt        DateTime?
+  estimatedDuration  Int?
+  vehicleId          String
+  customerId         String
+  kmAtEntry          Int
+  fuelLevel          Int?               @default(0)
+  laborHours         Float?             @default(0)
+  laborRate          Float?             @default(45)
+  laborCost          Float?             @default(0)
+  partsCost          Float?             @default(0)
+  totalAmount        Float?             @default(0)
+  margin             Float?             @default(0)
+  maintenanceType    MaintenanceType?
+  assignedToId       String?
+  readySMSSent       Boolean?           @default(false)
+  readySMSSentAt     DateTime?
+  createdAt          DateTime?           @default(now())
+  updatedAt          DateTime?           @updatedAt
+  accountingRecords  AccountingRecord[]
+  appointments       Appointment?
+  invoice            Invoice?
+  assignedTo         User?              @relation(fields: [assignedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer           Customer           @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicle            Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  notes              JobNote[]
+  photos             JobPhoto[]
+  parts              PartOnJob[]
+  convertedFromQuote Quote?             @relation("QuoteConvertedToJob")
+  smsMessages        SMSMessage[]
+  stockMovements     StockMovement[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([vehicleId])
+}
+
+model JobPhoto {
+  id          String   @id @default(cuid())
+  jobId       String
+  url         String
+  photoType   String?  @default("GENERAL")
+  description String?
+  createdAt   DateTime? @default(now())
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([jobId])
+}
+
+model JobNote {
+  id        String   @id @default(cuid())
+  jobId     String
+  content   String
+  noteType  String?  @default("GENERAL")
+  authorId  String
+  createdAt DateTime? @default(now())
+  author    User     @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([jobId])
+  @@index([authorId])
+}
+
+model Part {
+  id                String          @id @default(cuid())
+  code              String          @unique
+  name              String
+  description       String?
+  category          String?         @default("GENERIC")
+  brand             String?
+  buyPrice          Float?          @default(0)
+  sellPrice         Float?          @default(0)
+  markup            Float?          @default(30)
+  stock             Int?            @default(0)
+  minStock          Int?            @default(5)
+  maxStock          Int?            @default(50)
+  reorderPoint      Int?            @default(10)
+  stockLevel        StockLevel?     @default(NORMAL)
+  location          String?
+  barcode           String?         @unique
+  supplierCode      String?
+  supplierName      String?
+  totalValue        Float?          @default(0)
+  lastPurchasePrice Float?
+  lastPurchaseDate  DateTime?
+  createdAt         DateTime?       @default(now())
+  updatedAt         DateTime?       @updatedAt
+  jobs              PartOnJob[]
+  quoteItems        QuoteItem[]
+  alerts            StockAlert[]
+  movements         StockMovement[]
+
+  @@index([category])
+  @@index([stockLevel])
+}
+
+model PartOnJob {
+  id           String   @id @default(cuid())
+  jobId        String
+  partId       String
+  quantity     Int?      @default(1)
+  appliedPrice Float
+  discount     Float?    @default(0)
+  createdAt    DateTime? @default(now())
+  job          Job       @relation(fields: [jobId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  part         Part      @relation(fields: [partId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([jobId, partId])
+}
+
+model StockMovement {
+  id             String       @id @default(cuid())
+  movementNumber String       @unique
+  type           MovementType
+  partId         String
+  quantity       Int
+  unitPrice      Float?        @default(0)
+  totalValue     Float?        @default(0)
+  jobId          String?
+  documentNumber String?
+  stockBefore    Int
+  stockAfter     Int
+  notes          String?
+  reason         String?
+  performedById  String
+  createdAt      DateTime?     @default(now())
+  job            Job?          @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  part           Part         @relation(fields: [partId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  performedBy    User         @relation(fields: [performedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([partId])
+  @@index([type])
+}
+
+model StockAlert {
+  id        String   @id @default(cuid())
+  partId    String
+  alertType String
+  message   String
+  severity  String?  @default("WARNING")
+  isRead    Boolean? @default(false)
+  readAt    DateTime?
+  readById  String?
+  createdAt DateTime? @default(now())
+  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([partId])
+}
+
+model Invoice {
+  id                 String            @id @default(cuid())
+  invoiceNumber      String            @unique
+  year               Int
+  number             Int
+  status             InvoiceStatus?    @default(DRAFT)
+  issueDate          DateTime?          @default(now())
+  dueDate            DateTime
+  paidDate           DateTime?
+  customerId         String
+  jobId              String?           @unique
+  subtotal           Float?            @default(0)
+  taxRate            Float?            @default(22)
+  taxAmount          Float?            @default(0)
+  total              Float?            @default(0)
+  amountPaid         Float?            @default(0)
+  amountDue          Float?            @default(0)
+  paymentMethod      PaymentMethod?
+  notes              String?
+  internalNotes      String?
+  createdAt          DateTime?          @default(now())
+  updatedAt          DateTime?          @updatedAt
+  accountingRecord   AccountingRecord?
+  customer           Customer           @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job                Job?               @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items              InvoiceItem[]
+  convertedFromQuote Quote?            @relation("QuoteConvertedToInvoice")
+
+  @@index([issueDate])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Float?   @default(1)
+  unitPrice   Float
+  discount    Float?   @default(0)
+  vatRate     Float?   @default(22)
+  subtotal    Float
+  createdAt   DateTime? @default(now())
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([invoiceId])
+}
+
+model Expense {
+  id               String            @id @default(cuid())
+  expenseNumber    String?
+  category         ExpenseCategory
+  description      String
+  amount           Float
+  taxAmount        Float?            @default(0)
+  totalAmount      Float
+  expenseDate      DateTime?          @default(now())
+  dueDate          DateTime?
+  paidDate         DateTime?
+  isPaid           Boolean?          @default(false)
+  paymentMethod    PaymentMethod?
+  supplierName     String
+  supplierVAT      String?
+  createdAt        DateTime?          @default(now())
+  updatedAt        DateTime?          @updatedAt
+  accountingRecord AccountingRecord?
+
+  @@index([expenseDate])
+  @@index([category])
+}
+
+model AccountingRecord {
+  id           String         @id @default(cuid())
+  recordNumber String         @unique
+  type         AccountingType
+  date         DateTime?      @default(now())
+  amount       Float
+  totalAmount  Float
+  category     String
+  description  String
+  invoiceId    String?        @unique
+  expenseId    String?        @unique
+  jobId        String?
+  createdAt    DateTime?      @default(now())
+  updatedAt    DateTime?      @updatedAt
+  expense      Expense?       @relation(fields: [expenseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invoice      Invoice?       @relation(fields: [invoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job          Job?           @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([date])
+  @@index([type])
+}
+
+model SMSMessage {
+  id                String       @id @default(cuid())
+  phoneNumber       String
+  customerId        String?
+  message           String
+  type              SMSType
+  provider          SMSProvider
+  status            SMSStatus?   @default(PENDING)
+  providerMessageId String?
+  attempts          Int?         @default(0)
+  maxAttempts       Int?         @default(3)
+  lastAttemptAt     DateTime?
+  cost              Float?
+  creditsUsed       Float?
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  errorMessage      String?
+  providerResponse  String?
+  vehicleId         String?
+  jobId             String?
+  createdAt         DateTime?     @default(now())
+  updatedAt         DateTime?     @updatedAt
+  customer          Customer?      @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job               Job?           @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicle           Vehicle?       @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([customerId])
+  @@index([status])
+  @@index([type])
+  @@index([scheduledFor])
+}
+
+model SMSProviderConfig {
+  id                String      @id @default(cuid())
+  provider          SMSProvider @unique
+  isEnabled         Boolean?    @default(true)
+  priority          Int?        @default(1)
+  name              String
+  dailyLimit        Int?        @default(100)
+  messagesSentToday Int?        @default(0)
+  costPerSMS        Float?      @default(0.08)
+  remainingCredits  Float?      @default(0)
+  lastUsedAt        DateTime?
+  successRate       Float?      @default(100)
+  totalSent         Int?        @default(0)
+  totalFailed       Int?        @default(0)
+  lastResetDate     DateTime?   @default(now())
+  createdAt         DateTime?   @default(now())
+  updatedAt         DateTime?   @updatedAt
+}
+
+model Appointment {
+  id                      String             @id @default(cuid())
+  startAt                 DateTime
+  endAt                   DateTime
+  type                    AppointmentType?   @default(SCHEDULED_WORK)
+  status                  AppointmentStatus? @default(PLANNED)
+  notes                   String?
+  customerId              String?
+  vehicleId               String?
+  jobId                   String?            @unique
+  walkInName              String?
+  walkInPhone             String?
+  walkInPlate             String?
+  reminderDayBeforeSent   Boolean?           @default(false)
+  reminderDayBeforeSentAt DateTime?
+  reminderSameDaySent     Boolean?           @default(false)
+  reminderSameDaySentAt   DateTime?
+  createdById             String
+  createdAt               DateTime?          @default(now())
+  updatedAt               DateTime?          @updatedAt
+  createdBy               User               @relation(fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer                Customer?          @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job                     Job?               @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicle                 Vehicle?           @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([startAt])
+  @@index([status])
+}
+
+model Quote {
+  id                 String       @id @default(cuid())
+  quoteNumber        String       @unique
+  year               Int
+  number             Int
+  status             QuoteStatus? @default(DRAFT)
+  issueDate          DateTime?    @default(now())
+  validUntil         DateTime
+  customerId         String
+  vehicleId          String
+  km                 Int?
+  workDescription    String?
+  disclaimer         String?
+  laborHours         Float?       @default(0)
+  laborRate          Float?       @default(45)
+  subtotal           Float?       @default(0)
+  taxRate            Float?       @default(22)
+  taxAmount          Float?       @default(0)
+  total              Float?       @default(0)
+  convertedJobId     String?      @unique
+  convertedInvoiceId String?      @unique
+  createdById        String
+  createdAt          DateTime?    @default(now())
+  updatedAt          DateTime?    @updatedAt
+  convertedInvoice   Invoice?     @relation("QuoteConvertedToInvoice", fields: [convertedInvoiceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  convertedJob       Job?         @relation("QuoteConvertedToJob", fields: [convertedJobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy          User         @relation(fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer           Customer     @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vehicle            Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  items              QuoteItem[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([vehicleId])
+}
+
+model QuoteItem {
+  id                       String   @id @default(cuid())
+  quoteId                  String
+  partId                   String?
+  description              String
+  isPartProvidedByCustomer Boolean? @default(false)
+  quantity                 Float?   @default(1)
+  unitPrice                Float
+  discount                 Float?   @default(0)
+  vatRate                  Float?   @default(22)
+  subtotal                 Float
+  createdAt                DateTime? @default(now())
+  part                     Part?    @relation(fields: [partId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quote                    Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([quoteId])
+  @@index([partId])
+}
+
+model SupplierDelivery {
+  id             String   @id @default(cuid())
+  supplierName   String
+  documentNumber String
+  listNumber     String?
+  deliveryDate   DateTime
+  totalAmount    Float
+  taxAmount      Float
+  notes          String?
+  pdfUrl         String?
+  importedById   String
+  createdAt      DateTime? @default(now())
+  importedBy     User     @relation(fields: [importedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([supplierName, documentNumber])
+}
+
+model SMSCampaign {
+  id                    String    @id @default(cuid())
+  name                  String
+  message               String
+  scheduledFor          DateTime
+  status                String?    @default("DRAFT")
+  targetAllCustomers    Boolean?  @default(false)
+  targetCustomerIds     String?   // Store as JSON string for SQLite compatibility
+  targetMinTotalSpent   Float?
+  targetVehicleFuelType String?
+  totalSent             Int?      @default(0)
+  totalDelivered        Int?      @default(0)
+  totalFailed           Int?      @default(0)
+  createdById           String
+  createdAt             DateTime? @default(now())
+  updatedAt             DateTime? @updatedAt
+  createdBy             User     @relation(fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model WasteRecord {
+  id             String   @id @default(cuid())
+  type           String
+  quantity       Float
+  unit           String    @default("kg")
+  movementType   String
+  date           DateTime? @default(now())
+  documentNumber String?
+  carrierName    String?
+  notes          String?
+  recordedById   String
+  createdAt      DateTime? @default(now())
+  recordedBy     User     @relation(fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  MECHANIC
+  RECEPTIONIST
+  VIEWER
+}
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  PASSWORD_CHANGED
+  TWO_FA_ENABLED
+  TWO_FA_DISABLED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  CUSTOMER_DELETED
+  JOB_CREATED
+  JOB_UPDATED
+  JOB_DELETED
+  INVOICE_CREATED
+  INVOICE_UPDATED
+  INVOICE_PAID
+  INVOICE_CANCELLED
+  EXPENSE_CREATED
+  EXPENSE_UPDATED
+  EXPENSE_DELETED
+  PART_CREATED
+  PART_UPDATED
+  PART_DELETED
+  STOCK_ADJUSTED
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  WAITING_PARTS
+  COMPLETED
+  DELIVERED
+  CANCELLED
+  PENDING
+}
+
+enum MaintenanceType {
+  OIL_CHANGE
+  BRAKE_SERVICE
+  TIRE_ROTATION
+  GENERAL_INSPECTION
+  ENGINE_REPAIR
+  TRANSMISSION
+  ELECTRICAL
+  BODYWORK
+  OTHER
+}
+
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  RETURN
+  TRANSFER
+}
+
+enum StockLevel {
+  CRITICAL
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum AccountingType {
+  INCOME
+  EXPENSE
+  ADJUSTMENT
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  CHECK
+  PAYPAL
+  SATISPAY
+  OTHER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  RENT
+  UTILITIES
+  INSURANCE
+  SALARIES
+  TAXES
+  PARTS_PURCHASE
+  EQUIPMENT
+  MAINTENANCE
+  FUEL
+  MARKETING
+  SERVICES
+  OTHER
+}
+
+enum SMSProvider {
+  TWILIO
+  VONAGE
+  MESSAGEBIRD
+  MANUAL
+}
+
+enum SMSStatus {
+  PENDING
+  SENDING
+  SENT
+  DELIVERED
+  FAILED
+  REJECTED
+  QUEUED
+}
+
+enum SMSType {
+  OIL_CHANGE_REMINDER
+  INSPECTION_REMINDER
+  CAR_READY
+  APPOINTMENT_CONFIRM
+  QUOTE_READY
+  PAYMENT_REMINDER
+  MARKETING
+  CUSTOM
+}
+
+enum AppointmentType {
+  DIAGNOSTIC
+  SCHEDULED_WORK
+  PICKUP
+  OTHER
+}
+
+enum AppointmentStatus {
+  PLANNED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  CONVERTED
+  EXPIRED
+}
