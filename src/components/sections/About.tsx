@@ -4,14 +4,14 @@ import { BadgeCheck, Wrench, Cpu } from "lucide-react";
 import { SITE_DATA } from "@/constants";
 
 const stats = [
-  { icon: <BadgeCheck className="text-orange-500" />, label: "Esperienza", value: "20+ Anni" },
-  { icon: <Cpu className="text-orange-500" />, label: "Diagnosi", value: "Avanzata" },
-  { icon: <Wrench className="text-orange-500" />, label: "Riparazioni", value: "Garantite" },
+  { icon: <BadgeCheck className="text-primary" />, label: "Esperienza", value: "20+ Anni" },
+  { icon: <Cpu className="text-primary" />, label: "Diagnosi", value: "Avanzata" },
+  { icon: <Wrench className="text-primary" />, label: "Riparazioni", value: "Garantite" },
 ];
 
 export default function About() {
   return (
-    <section id="chi-siamo" className="py-24 bg-background">
+    <section id="chi-siamo" className="py-24 bg-[#0e0e0e]">
       <div className="container">
         <div className="flex flex-col lg:flex-row gap-16 items-center">
           
@@ -22,12 +22,18 @@ export default function About() {
             className="w-full lg:w-1/2 relative"
           >
             {/* Classi aggiornate per Tailwind v4: bg-linear-to-br e p-px */}
-            <div className="aspect-square rounded-2xl bg-linear-to-br from-orange-600 to-blue-600 p-px">
-              <div className="w-full h-full bg-slate-950 rounded-2xl flex items-center justify-center overflow-hidden relative">
-                <div className="absolute inset-0 bg-orange-600/5" />
-                <div className="z-10 text-center">
-                   <div className="text-primary font-mono text-8xl font-bold opacity-20">GT</div>
-                   <p className="text-gray-500 mt-4 uppercase tracking-[0.3em]">Precision Engineering</p>
+            <div className="aspect-square rounded-2xl bg-linear-to-br from-primary to-[#1a1a1a] p-px">
+              <div className="w-full h-full bg-[#0e0e0e] rounded-2xl overflow-hidden relative">
+                {/* PLACEHOLDER: sostituisci con una tua foto in public/officina.jpg e src="/officina.jpg" */}
+                <img
+                  src="https://picsum.photos/seed/gtservice-lab/900/900?grayscale"
+                  alt="Officina GT Service"
+                  className="w-full h-full object-cover opacity-80"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#0e0e0e] via-[#0e0e0e]/30 to-transparent" />
+                <div className="absolute bottom-6 left-6 z-10">
+                  <div className="text-primary font-mono text-5xl font-bold">GT</div>
+                  <p className="text-gray-300 uppercase tracking-[0.3em] text-sm">Precision Engineering</p>
                 </div>
               </div>
             </div>

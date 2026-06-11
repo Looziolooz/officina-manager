@@ -62,7 +62,7 @@ const cardVariants = {
 
 export default function Services() {
   return (
-    <section id="servizi" className="py-24 bg-slate-950/50">
+    <section id="servizi" className="py-24 bg-[#141414]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-primary font-semibold tracking-widest uppercase mb-2">I Nostri Interventi</h2>

@@ -5,7 +5,7 @@ import ContactLocation from "@/components/sections/ContactLocation";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background overflow-x-hidden pt-20"> 
+    <main className="min-h-screen bg-[#0e0e0e] text-white overflow-x-hidden pt-20">
       <Hero />
       <About />
       <Services /> 

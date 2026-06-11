@@ -17,7 +17,7 @@ export default function Navbar() {
   const { data: session } = useSession();
 
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-background/80 backdrop-blur-md">
+    <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-[#0e0e0e]/90 backdrop-blur-md">
       <div className="container flex justify-between items-center h-20">
         <Link href="/" className="flex items-center gap-2 group">
           <Settings className="text-primary w-8 h-8 group-hover:rotate-90 transition-transform duration-500" />
@@ -73,7 +73,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-background border-b border-white/10"
+            className="md:hidden bg-[#0e0e0e] border-b border-white/10"
           >
             <div className="flex flex-col p-6 gap-4">
               {navLinks.map((link) => (
