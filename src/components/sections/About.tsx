@@ -13,6 +13,19 @@ export default function About() {
   return (
     <section id="chi-siamo" className="py-24 bg-[#0e0e0e]">
       <div className="container">
+        {/* Intestazione centrata */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center max-w-3xl mx-auto mb-16"
+        >
+          <h2 className="text-primary font-semibold tracking-widest uppercase mb-2">Chi Siamo</h2>
+          <h3 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+            L&apos;evoluzione dell&apos;officina meccanica a Jonadi.
+          </h3>
+        </motion.div>
+
         <div className="flex flex-col lg:flex-row gap-16 items-center">
           
           <motion.div 
@@ -45,10 +58,6 @@ export default function About() {
             viewport={{ once: true }}
             className="w-full lg:w-1/2"
           >
-            <h2 className="text-primary font-semibold tracking-widest uppercase mb-2">Chi Siamo</h2>
-            <h3 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-              L&apos;evoluzione dell&apos;officina <br/> meccanica a Jonadi.
-            </h3>
             <p className="text-gray-400 text-lg mb-8 leading-relaxed">
               {"GT Service non è una semplice officina. Sotto la guida di "}
               <span className="text-white font-semibold">{SITE_DATA.owner}</span>

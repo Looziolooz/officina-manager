@@ -11,7 +11,7 @@ export default function AdminLayout({
       <Sidebar />
       
       {/* Contenuto principale che si espande */}
-      <main className="flex-1 overflow-x-hidden transition-all duration-300">
+      <main className="flex-1 overflow-x-hidden transition-all duration-300 pt-14 md:pt-0 min-w-0">
         {children}
       </main>
     </div>

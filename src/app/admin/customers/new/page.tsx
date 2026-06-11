@@ -189,10 +189,9 @@ export default function NewCustomerPage() {
           <h2 className="text-xl font-bold text-foreground">Compila dal libretto</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Scatta una foto, oppure carica la <strong>scansione della fotocopiatrice</strong> (PDF o
-          immagine) del libretto di circolazione: i campi qui sotto verranno compilati
-          automaticamente. Controlla sempre i dati prima di salvare. Telefono e km non sono sul
-          libretto: vanno inseriti a mano.
+          Scatta una foto o carica un&apos;immagine (JPG/PNG) del libretto di circolazione: i campi
+          qui sotto verranno compilati automaticamente. Controlla sempre i dati prima di salvare.
+          Telefono e km non sono sul libretto: vanno inseriti a mano.
         </p>
         <div className="flex flex-wrap gap-3">
           {/* Scatta foto (su mobile apre la fotocamera) */}
@@ -222,7 +221,7 @@ export default function NewCustomerPage() {
             )}
           </label>
 
-          {/* Carica scansione fotocopiatrice (PDF) o immagine dal computer */}
+          {/* Carica un'immagine del libretto dal computer */}
           <label
             className={`inline-flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all border ${
               scanState === "loading"
@@ -232,12 +231,12 @@ export default function NewCustomerPage() {
           >
             <input
               type="file"
-              accept="image/*,application/pdf"
+              accept="image/*"
               className="hidden"
               onChange={handleLibrettoFile}
               disabled={scanState === "loading"}
             />
-            <ScanLine size={18} /> Carica scansione (PDF/immagine)
+            <ScanLine size={18} /> Carica immagine
           </label>
         </div>
         {scanMessage && (

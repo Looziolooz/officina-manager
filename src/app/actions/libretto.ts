@@ -29,62 +29,41 @@ export interface ExtractResult {
 
 const FUEL_TYPES = ["Diesel", "Benzina", "Ibrida", "Elettrica", "GPL", "Metano"];
 
-// Schema per gli Structured Outputs di OpenAI (strict: ogni campo richiesto, nullable).
-const LIBRETTO_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    firstName: { type: ["string", "null"], description: "Nome dell'intestatario (campo C.2.1 / persona fisica)" },
-    lastName: { type: ["string", "null"], description: "Cognome dell'intestatario; per le aziende lascia null" },
-    fiscalCode: { type: ["string", "null"], description: "Codice fiscale dell'intestatario" },
-    address: { type: ["string", "null"], description: "Indirizzo (via e numero civico)" },
-    city: { type: ["string", "null"], description: "Comune / città di residenza" },
-    postalCode: { type: ["string", "null"], description: "CAP" },
-    province: { type: ["string", "null"], description: "Sigla provincia, es. MI, RM" },
-    plate: { type: ["string", "null"], description: "Targa (campo A), senza spazi, maiuscolo" },
-    brand: { type: ["string", "null"], description: "Marca / casa costruttrice (campo D.1)" },
-    model: { type: ["string", "null"], description: "Modello o tipo (campo D.2 / D.3)" },
-    year: { type: ["integer", "null"], description: "Anno di prima immatricolazione (dalla data campo B)" },
-    vin: { type: ["string", "null"], description: "Numero di telaio / VIN (campo E)" },
-    fuelType: { type: ["string", "null"], enum: [...FUEL_TYPES, null], description: "Tipo di alimentazione" },
-    engineSize: { type: ["string", "null"], description: "Cilindrata in cc (campo P.1) come numero, es. 1248" },
-  },
-  required: [
-    "firstName", "lastName", "fiscalCode", "address", "city", "postalCode",
-    "province", "plate", "brand", "model", "year", "vin", "fuelType", "engineSize",
-  ],
-} as const;
-
-const SYSTEM_PROMPT = `Sei un assistente che estrae dati da una foto o scansione di un libretto di circolazione italiano (carta di circolazione / Documento Unico di Circolazione).
+const SYSTEM_PROMPT = `Sei un assistente che estrae dati da una FOTO di un libretto di circolazione italiano (carta di circolazione / Documento Unico di Circolazione).
 Leggi l'immagine ed estrai SOLO i valori che riesci a leggere con certezza. Per ogni campo non presente, illeggibile o di cui non sei sicuro usa null: è molto meglio restituire null che inventare un valore.
 Riferimenti ai codici del libretto: A = targa, B = data prima immatricolazione (da cui ricavare l'anno), D.1 = marca, D.2/D.3 = modello/tipo, E = numero di telaio (VIN), P.1 = cilindrata in cc, P.3 = tipo di alimentazione, C.2 = intestatario (nome/cognome), insieme a codice fiscale e indirizzo.
-La targa va restituita in maiuscolo senza spazi. Non aggiungere commenti: restituisci esclusivamente i dati strutturati richiesti.`;
+La targa va in MAIUSCOLO senza spazi.
+
+Rispondi ESCLUSIVAMENTE con un oggetto JSON valido con ESATTAMENTE queste chiavi (usa null se non leggibile):
+{"firstName":null,"lastName":null,"fiscalCode":null,"address":null,"city":null,"postalCode":null,"province":null,"plate":null,"brand":null,"model":null,"year":null,"vin":null,"fuelType":null,"engineSize":null}
+"year" è un numero (anno), "fuelType" è uno tra: Diesel, Benzina, Ibrida, Elettrica, GPL, Metano. Nessun testo prima o dopo il JSON.`;
 
 export async function extractLibrettoData(fileDataUrl: string): Promise<ExtractResult> {
   await requireSession();
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  // Groq: motore AI gratuito, API compatibile con OpenAI.
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return { success: false, message: "OPENAI_API_KEY non configurata sul server." };
+    return { success: false, message: "GROQ_API_KEY non configurata. Crea una chiave gratuita su console.groq.com e mettila nelle variabili d'ambiente." };
   }
 
   const isImage = typeof fileDataUrl === "string" && fileDataUrl.startsWith("data:image/");
   const isPdf = typeof fileDataUrl === "string" && fileDataUrl.startsWith("data:application/pdf");
-  if (!isImage && !isPdf) {
-    return { success: false, message: "File non valido. Carica una foto (JPG/PNG) o una scansione PDF." };
+  if (isPdf) {
+    return { success: false, message: "Con il motore gratuito (Groq) carica una FOTO del libretto (JPG/PNG): il PDF dello scanner non è ancora supportato." };
   }
-  // Limite di sicurezza: ~14MB di data URL (foto già ridotta lato client; PDF di scansione).
+  if (!isImage) {
+    return { success: false, message: "File non valido. Carica una foto (JPG/PNG) del libretto." };
+  }
   if (fileDataUrl.length > 14_000_000) {
-    return { success: false, message: "File troppo grande. Usa una foto più leggera o riduci la risoluzione dello scanner." };
+    return { success: false, message: "Immagine troppo grande. Riprova con una foto più leggera." };
   }
 
-  // Foto -> contenuto immagine; scansione PDF (anche multipagina, es. fronte/retro) -> contenuto file.
-  const fileContent = isPdf
-    ? { type: "file", file: { filename: "libretto.pdf", file_data: fileDataUrl } }
-    : { type: "image_url", image_url: { url: fileDataUrl, detail: "high" } };
+  // Modello vision di Groq (override via GROQ_MODEL se cambia il nome).
+  const model = process.env.GROQ_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
 
   const body = {
-    model: "gpt-4o-mini",
+    model,
     temperature: 0,
     max_tokens: 800,
     messages: [
@@ -92,33 +71,30 @@ export async function extractLibrettoData(fileDataUrl: string): Promise<ExtractR
       {
         role: "user",
         content: [
-          { type: "text", text: "Estrai i dati anagrafici e del veicolo da questo libretto di circolazione." },
-          fileContent,
+          { type: "text", text: "Estrai i dati anagrafici e del veicolo da questo libretto e rispondi SOLO con il JSON." },
+          { type: "image_url", image_url: { url: fileDataUrl } },
         ],
       },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: { name: "libretto", strict: true, schema: LIBRETTO_SCHEMA },
-    },
+    response_format: { type: "json_object" },
   };
 
   let res: Response;
   try {
-    res = await fetch("https://api.openai.com/v1/chat/completions", {
+    res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(body),
     });
   } catch (e) {
-    console.error("[libretto] richiesta a OpenAI fallita:", e);
+    console.error("[libretto] richiesta a Groq fallita:", e);
     return { success: false, message: "Impossibile contattare il servizio AI. Riprova." };
   }
 
   if (!res.ok) {
     // Non logghiamo l'immagine (PII). Solo lo stato e un estratto dell'errore.
     const errText = await res.text().catch(() => "");
-    console.error("[libretto] OpenAI ha risposto", res.status, errText.slice(0, 300));
+    console.error("[libretto] Groq ha risposto", res.status, errText.slice(0, 300));
     return { success: false, message: `Errore dal servizio AI (${res.status}).` };
   }
 

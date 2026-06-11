@@ -8,13 +8,13 @@ export default function Hero() {
       <img
         src="https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=1920&q=70"
         alt="Officina meccanica GT Service"
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
+        className="absolute inset-0 w-full h-full object-cover opacity-70"
       />
       {/* Overlay scuro per leggibilità + accento rosso brand */}
-      <div className="absolute inset-0 bg-linear-to-b from-[#0e0e0e]/80 via-[#0e0e0e]/85 to-[#0e0e0e]" />
+      <div className="absolute inset-0 bg-linear-to-b from-[#0e0e0e]/40 via-[#0e0e0e]/35 to-[#0e0e0e]/85" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-primary/15 via-transparent to-transparent" />
 
-      <div className="z-10 text-center px-4">
+      <div className="z-10 text-center px-4 [text-shadow:0_2px_14px_rgba(0,0,0,0.75)]">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary mb-6">
           <Settings className="w-4 h-4 animate-spin-slow" />
           <span className="text-sm font-medium uppercase tracking-wider">Eccellenza Meccanotronica</span>
