@@ -1,4 +1,5 @@
-import { Settings, MapPin, Phone } from "lucide-react";
+import { Settings, MapPin, Calendar } from "lucide-react";
+import Link from "next/link";
 import { SITE_DATA } from "@/constants";
 
 export default function Hero() {
@@ -32,9 +33,9 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <a href={`tel:${SITE_DATA.phone}`} className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover transition-colors px-8 py-4 rounded-lg font-bold">
-            <Phone size={20} /> Prenota Intervento
-          </a>
+          <Link href="/prenota" className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover transition-colors px-8 py-4 rounded-lg font-bold">
+            <Calendar size={20} /> Prenota Intervento
+          </Link>
           <a href="#contatti" className="flex items-center justify-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all px-8 py-4 rounded-lg font-bold">
             <MapPin size={20} /> Dove Siamo
           </a>
