@@ -4,12 +4,11 @@ import { SITE_DATA } from "@/constants";
 export default function Hero() {
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-[#0e0e0e] text-white">
-      {/* Foto di sfondo — PLACEHOLDER: sostituisci mettendo la tua foto in public/hero.jpg
-          e cambiando src in "/hero.jpg" */}
+      {/* Foto officina (Unsplash). Per usare la TUA: metti public/hero.jpg e src="/hero.jpg" */}
       <img
-        src="https://picsum.photos/seed/gtservice-officina/1920/1080?grayscale"
-        alt="Officina GT Service"
-        className="absolute inset-0 w-full h-full object-cover opacity-25"
+        src="https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=1920&q=70"
+        alt="Officina meccanica GT Service"
+        className="absolute inset-0 w-full h-full object-cover opacity-40"
       />
       {/* Overlay scuro per leggibilità + accento rosso brand */}
       <div className="absolute inset-0 bg-linear-to-b from-[#0e0e0e]/80 via-[#0e0e0e]/85 to-[#0e0e0e]" />

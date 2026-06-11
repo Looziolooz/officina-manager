@@ -24,11 +24,11 @@ export default function About() {
             {/* Classi aggiornate per Tailwind v4: bg-linear-to-br e p-px */}
             <div className="aspect-square rounded-2xl bg-linear-to-br from-primary to-[#1a1a1a] p-px">
               <div className="w-full h-full bg-[#0e0e0e] rounded-2xl overflow-hidden relative">
-                {/* PLACEHOLDER: sostituisci con una tua foto in public/officina.jpg e src="/officina.jpg" */}
+                {/* Foto officina (Unsplash). Per usare la TUA: metti public/officina.jpg e src="/officina.jpg" */}
                 <img
-                  src="https://picsum.photos/seed/gtservice-lab/900/900?grayscale"
-                  alt="Officina GT Service"
-                  className="w-full h-full object-cover opacity-80"
+                  src="https://images.unsplash.com/photo-1599256872237-5dcc0fbe9668?auto=format&fit=crop&w=900&h=900&q=75"
+                  alt="Meccanico al lavoro - GT Service"
+                  className="w-full h-full object-cover opacity-90"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-[#0e0e0e] via-[#0e0e0e]/30 to-transparent" />
                 <div className="absolute bottom-6 left-6 z-10">
