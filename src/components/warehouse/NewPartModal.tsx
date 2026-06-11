@@ -90,12 +90,12 @@ export default function NewPartModal() {
       {/* 2. IL MODALE (Visibile solo se isOpen è true) */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-4 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold text-white">Nuovo Ricambio</h2>
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-surface/95 backdrop-blur border-b border-border p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-foreground">Nuovo Ricambio</h2>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X size={24} />
               </button>
@@ -112,106 +112,106 @@ export default function NewPartModal() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Codice *</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Codice *</label>
                     <input
                       {...register("code")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                       placeholder="COD-123"
                     />
                     {errors.code && <p className="text-red-400 text-xs mt-1">{errors.code.message as string}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Nome *</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Nome *</label>
                     <input
                       {...register("name")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                       placeholder="Filtro Olio"
                     />
                     {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message as string}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Categoria *</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Categoria *</label>
                     <input
                       {...register("category")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                       placeholder="Motore"
                     />
                     {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category.message as string}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Marca</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Marca</label>
                     <input
                       {...register("brand")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                       placeholder="Bosch"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Posizione (Scaffale)</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Posizione (Scaffale)</label>
                     <input
                       {...register("location")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                       placeholder="A-12"
                     />
                   </div>
                 </div>
 
-                <div className="border-t border-white/10 my-4"></div>
-                <h3 className="text-white font-bold mb-3">Prezzi e Stock</h3>
+                <div className="border-t border-border my-4"></div>
+                <h3 className="text-foreground font-bold mb-3">Prezzi e Stock</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Prezzo Acquisto (€)</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Prezzo Acquisto (€)</label>
                     <input
                       type="number"
                       step="0.01"
                       {...register("buyPrice")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Ricarico (%)</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Ricarico (%)</label>
                     <input
                       type="number"
                       step="1"
                       {...register("markup")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Prezzo Vendita (Calc)</label>
-                    <div className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-gray-400 cursor-not-allowed">
+                    <label className="block text-sm text-muted-foreground mb-1">Prezzo Vendita (Calc)</label>
+                    <div className="w-full bg-black/50 border border-border rounded-lg p-3 text-muted-foreground cursor-not-allowed">
                       € {((Number(buyPrice) || 0) * (1 + (Number(markup) || 0) / 100)).toFixed(2)}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Scorta Minima</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Scorta Minima</label>
                     <input
                       type="number"
                       {...register("minStock")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Scorta Massima</label>
+                    <label className="block text-sm text-muted-foreground mb-1">Scorta Massima</label>
                     <input
                       type="number"
                       {...register("maxStock")}
-                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                      className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="px-6 py-3 rounded-xl text-gray-400 hover:bg-white/5 transition-colors"
+                    className="px-6 py-3 rounded-xl text-muted-foreground hover:bg-background transition-colors"
                   >
                     Annulla
                   </button>

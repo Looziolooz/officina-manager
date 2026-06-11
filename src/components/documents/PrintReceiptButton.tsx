@@ -10,7 +10,7 @@ export default function PrintReceiptButton({ customerData }: { customerData: Rec
     <PDFDownloadLink
       document={<EntryReceipt data={customerData} />}
       fileName={`ricevuta_${customerData.plate.replace(/\s/g, "_")}.pdf`}
-      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg"
+      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-foreground px-6 py-3 rounded-xl font-bold transition-all shadow-lg"
     >
       {({ loading }) => (
         <>

@@ -7,6 +7,9 @@ import { TopPartsWidget, TopCustomersWidget } from "@/components/dashboard/TopWi
 import { formatCurrency } from "@/lib/utils";
 import { DollarSign, TrendingUp, Car, Package, AlertCircle } from "lucide-react";
 
+// La dashboard legge la sessione (cookie/headers): è sempre dinamica.
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
   // Caricamento robusto: se il database non risponde, mostriamo un messaggio
   // chiaro invece della schermata tecnica di errore (importante per non esperti).
@@ -17,14 +20,14 @@ export default async function AdminDashboard() {
     console.error("[dashboard] caricamento dati fallito:", error);
     return (
       <div className="min-h-screen p-6 flex items-center justify-center">
-        <div className="max-w-md text-center rounded-2xl bg-slate-900 border border-white/10 p-10">
+        <div className="max-w-md text-center rounded-2xl bg-surface border border-border p-10">
           <div className="inline-flex p-3 rounded-xl bg-red-500/10 text-red-400 mb-4">
             <AlertCircle size={28} />
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">
+          <h2 className="text-lg font-bold text-foreground mb-2">
             Impossibile caricare i dati
           </h2>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Si è verificato un problema nel recupero dei dati della dashboard.
             Ricarica la pagina tra qualche istante. Se il problema persiste,
             contatta l&apos;assistenza.
@@ -40,8 +43,8 @@ export default async function AdminDashboard() {
     <div className="min-h-screen p-6 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-        <p className="text-gray-400">Panoramica officina in tempo reale</p>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Panoramica officina in tempo reale</p>
       </div>
 
       {/* Da tenere d'occhio — informazioni azionabili in primo piano */}

@@ -16,39 +16,39 @@ export function DashboardKpiCard({ label, value, icon, delta, hint }: DashboardK
   const isUp = delta ? delta.value >= 0 : false;
 
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/10 p-6">
+    <div className="rounded-2xl bg-surface border border-border p-6">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs uppercase tracking-wider text-gray-400 font-medium">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
             {label}
           </span>
           {hint && (
             <span
               title={hint}
               aria-label={hint}
-              className="text-gray-500 hover:text-gray-300 cursor-help"
+              className="text-muted-foreground hover:text-foreground cursor-help"
             >
               <Info size={13} />
             </span>
           )}
         </div>
-        <span className="text-gray-400">{icon}</span>
+        <span className="text-muted-foreground">{icon}</span>
       </div>
 
-      <div className="text-3xl font-bold text-white tracking-tight">{value}</div>
+      <div className="text-3xl font-bold text-foreground tracking-tight">{value}</div>
 
       {delta && (
         <div className="mt-2 flex items-center gap-2">
           <span
             className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-              isUp ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"
+              isUp ? "bg-green-500/15 text-success" : "bg-red-500/15 text-red-400"
             }`}
           >
             {isUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
             {isUp ? "+" : ""}
             {delta.value}%
           </span>
-          {delta.label && <span className="text-xs text-gray-500">{delta.label}</span>}
+          {delta.label && <span className="text-xs text-muted-foreground">{delta.label}</span>}
         </div>
       )}
     </div>

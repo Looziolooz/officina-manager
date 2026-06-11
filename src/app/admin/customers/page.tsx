@@ -30,8 +30,8 @@ export default async function CustomersPage({
     <div className="space-y-8 p-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter">CRM Clienti</h1>
-          <p className="text-gray-400 text-sm">Gestione anagrafica e storico</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tighter">CRM Clienti</h1>
+          <p className="text-muted-foreground text-sm">Gestione anagrafica e storico</p>
         </div>
         <Link 
           href="/admin/customers/new" 
@@ -41,7 +41,7 @@ export default async function CustomersPage({
         </Link>
       </div>
 
-      <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 backdrop-blur-md sticky top-20 z-10">
+      <div className="bg-surface border border-border rounded-2xl p-4 backdrop-blur-md sticky top-20 z-10">
         <SearchInput placeholder="Cerca per nome, targa o telefono..." defaultValue={query} />
       </div>
 
@@ -50,18 +50,18 @@ export default async function CustomersPage({
           <Link 
             key={c.id} 
             href={`/admin/customers/${c.id}`}
-            className="group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-primary/30 p-6 rounded-2xl transition-all duration-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            className="group bg-background hover:bg-background border border-border hover:border-primary/30 p-6 rounded-2xl transition-all duration-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
           >
             <div className="flex items-center gap-4">
               {/* FIX: Aggiornato a bg-linear-to-br per Tailwind v4 */}
-              <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center border border-white/10 text-gray-400 group-hover:text-primary transition-colors">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-800 to-gray-900 flex items-center justify-center border border-border text-muted-foreground group-hover:text-primary transition-colors">
                 <User size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
+                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                   {c.firstName} {c.lastName}
                 </h3>
-                <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                   <span className="flex items-center gap-1"><Phone size={12} /> {c.phone}</span>
                   {c.lastVisit && (
                     <span className="flex items-center gap-1">
@@ -76,20 +76,20 @@ export default async function CustomersPage({
             <div className="flex flex-col md:items-end gap-2">
               <div className="flex gap-2 flex-wrap justify-end">
                 {c.vehicles.map(v => (
-                  <span key={v.id} className="bg-black/30 border border-white/10 px-3 py-1 rounded-lg text-xs font-mono font-bold text-gray-300 flex items-center gap-2">
+                  <span key={v.id} className="bg-background border border-border px-3 py-1 rounded-lg text-xs font-mono font-bold text-foreground flex items-center gap-2">
                     <Car size={12} className="text-primary" /> {v.plate}
                   </span>
                 ))}
               </div>
               <div className="text-right">
-                <span className="text-xs uppercase tracking-widest text-gray-500 block">Totale Speso</span>
-                <span className="text-lg font-mono font-bold text-green-400">€ {(c.totalSpent || 0).toFixed(2)}</span>
+                <span className="text-xs uppercase tracking-widest text-muted-foreground block">Totale Speso</span>
+                <span className="text-lg font-mono font-bold text-success">€ {(c.totalSpent || 0).toFixed(2)}</span>
               </div>
             </div>
           </Link>
         ))}
         {customers.length === 0 && (
-          <div className="text-center py-20 text-gray-500">Nessun cliente trovato</div>
+          <div className="text-center py-20 text-muted-foreground">Nessun cliente trovato</div>
         )}
       </div>
     </div>

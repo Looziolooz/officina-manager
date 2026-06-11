@@ -78,7 +78,7 @@ export default async function QuoteDetailPage({
                 <input type="hidden" name="status" value="SENT" />
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                  className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700 text-sm"
                 >
                   Invia Preventivo
                 </button>
@@ -90,7 +90,7 @@ export default async function QuoteDetailPage({
                   <input type="hidden" name="status" value="ACCEPTED" />
                   <button
                     type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                    className="bg-green-600 text-foreground px-4 py-2 rounded hover:bg-green-700 text-sm"
                   >
                     Accetta
                   </button>
@@ -99,7 +99,7 @@ export default async function QuoteDetailPage({
                   <input type="hidden" name="status" value="REJECTED" />
                   <button
                     type="submit"
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+                    className="bg-red-600 text-foreground px-4 py-2 rounded hover:bg-red-700 text-sm"
                   >
                     Rifiuta
                   </button>
@@ -110,7 +110,7 @@ export default async function QuoteDetailPage({
               <form action={handleConvertToJob}>
                 <button
                   type="submit"
-                  className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
+                  className="bg-purple-600 text-foreground px-4 py-2 rounded hover:bg-purple-700 text-sm"
                 >
                   Converti in Lavoro
                 </button>
@@ -120,7 +120,7 @@ export default async function QuoteDetailPage({
               <form action={handleConvertToInvoice}>
                 <button
                   type="submit"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm"
+                  className="bg-indigo-600 text-foreground px-4 py-2 rounded hover:bg-indigo-700 text-sm"
                 >
                   Converti in Fattura
                 </button>
@@ -132,23 +132,23 @@ export default async function QuoteDetailPage({
         {/* Customer and Vehicle Info */}
         <div className="grid grid-cols-2 gap-6 mb-6">
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Cliente</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Cliente</h3>
             <p className="font-medium">{quote.customer.firstName} {quote.customer.lastName}</p>
-            <p className="text-sm text-gray-600">{quote.customer.email}</p>
-            <p className="text-sm text-gray-600">{quote.customer.phone}</p>
+            <p className="text-sm text-muted-foreground">{quote.customer.email}</p>
+            <p className="text-sm text-muted-foreground">{quote.customer.phone}</p>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Veicolo</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Veicolo</h3>
             <p className="font-medium">{quote.vehicle.plate}</p>
-            <p className="text-sm text-gray-600">{quote.vehicle.brand} {quote.vehicle.modelName}</p>
-            {quote.km && <p className="text-sm text-gray-600">KM: {quote.km}</p>}
+            <p className="text-sm text-muted-foreground">{quote.vehicle.brand} {quote.vehicle.modelName}</p>
+            {quote.km && <p className="text-sm text-muted-foreground">KM: {quote.km}</p>}
           </div>
         </div>
 
         {/* Work Description */}
         {quote.workDescription && (
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Descrizione Lavoro</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Descrizione Lavoro</h3>
             <p className="text-gray-700">{quote.workDescription}</p>
           </div>
         )}
@@ -159,12 +159,12 @@ export default async function QuoteDetailPage({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Descrizione</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Qtà</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Prezzo Unit.</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Sconto</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">IVA</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Totale</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Descrizione</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Qtà</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Prezzo Unit.</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Sconto</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">IVA</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Totale</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -185,7 +185,7 @@ export default async function QuoteDetailPage({
                   <td className="px-4 py-2">
                     {item.description}
                     {item.isPartProvidedByCustomer && (
-                      <span className="ml-2 text-xs text-gray-500">(Fornito dal cliente)</span>
+                      <span className="ml-2 text-xs text-muted-foreground">(Fornito dal cliente)</span>
                     )}
                   </td>
                   <td className="px-4 py-2">{item.quantity}</td>
@@ -220,7 +220,7 @@ export default async function QuoteDetailPage({
         </div>
 
          {/* Dates */}
-         <div className="mt-6 pt-4 border-t text-sm text-gray-500">
+         <div className="mt-6 pt-4 border-t text-sm text-muted-foreground">
            <p>Creato il: {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString() : "-"}</p>
            <p>Validità fino al: {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : "-"}</p>
           {quote.convertedJobId && (

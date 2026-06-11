@@ -23,11 +23,11 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Calendar className="text-primary" size={32} />
             Calendario Appuntamenti
           </h1>
-          <p className="text-gray-400 mt-2">Gestisci gli appuntamenti della settimana</p>
+          <p className="text-muted-foreground mt-2">Gestisci gli appuntamenti della settimana</p>
         </div>
         
         <Link
@@ -40,7 +40,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       </div>
 
       {/* Calendar */}
-      <Suspense fallback={<div className="text-white">Caricamento calendario...</div>}>
+      <Suspense fallback={<div className="text-foreground">Caricamento calendario...</div>}>
         <WeekCalendarClient
           appointments={appointments}
           currentDate={currentDate}

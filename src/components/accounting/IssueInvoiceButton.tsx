@@ -36,7 +36,7 @@ export default function IssueInvoiceButton({ jobId, hasInvoice }: Props) {
 
   if (hasInvoice) {
     return (
-      <span className="text-xs text-emerald-400 font-bold border border-emerald-400/30 px-3 py-1 rounded-full flex items-center gap-1">
+      <span className="text-xs text-success font-bold border border-emerald-400/30 px-3 py-1 rounded-full flex items-center gap-1">
         <FileText size={12} /> Fatturata
       </span>
     );

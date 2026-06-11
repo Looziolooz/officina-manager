@@ -97,7 +97,7 @@ export default function NewSMSCampaignPage() {
           {errors.message && (
             <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {watch("message")?.length || 0}/160 caratteri
           </p>
         </div>
@@ -184,7 +184,7 @@ export default function NewSMSCampaignPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="bg-blue-600 text-foreground px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           >
             {loading ? "Salvataggio..." : "Crea Campagna"}
           </button>

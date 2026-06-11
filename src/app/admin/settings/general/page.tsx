@@ -165,7 +165,7 @@ export default function GeneralSettingsPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="bg-blue-600 text-foreground px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           >
             {loading ? "Salvataggio..." : "Salva Impostazioni"}
           </button>

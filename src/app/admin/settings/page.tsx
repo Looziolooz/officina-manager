@@ -10,7 +10,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/general" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Generali</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Gestisci i dati della tua azienda, logo e informazioni fiscali
             </p>
           </div>
@@ -20,7 +20,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/sms" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Template SMS</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Configura i messaggi automatici per reminder, notifiche e marketing
             </p>
           </div>
@@ -30,7 +30,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/sms-providers" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Provider SMS</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Configura Twilio, Vonage, MessageBird o altri provider SMS
             </p>
           </div>
@@ -40,7 +40,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/security" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Sicurezza</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Gestisci password policy, 2FA obbligatorio e sessioni utenti
             </p>
           </div>
@@ -50,7 +50,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/notifications" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Notifiche</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Imposta regole per avvisi scorte magazzino, scadenze e promemoria
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function SettingsPage() {
         <Link href="/admin/settings/backup" className="block">
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition">
             <h3 className="text-lg font-medium mb-2">Backup & Export</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Esporta dati, backup database e configurazione sistema
             </p>
           </div>

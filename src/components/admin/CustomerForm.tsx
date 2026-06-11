@@ -48,55 +48,55 @@ export default function CustomerForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
       {/* SEZIONE CLIENTE */}
-      <div className="bg-white/5 p-6 rounded-xl border border-white/10">
+      <div className="bg-background p-6 rounded-xl border border-border">
         <div className="flex items-center gap-2 mb-6 text-primary">
           <User size={20} />
-          <h2 className="text-xl font-semibold text-white">Dati Anagrafici</h2>
+          <h2 className="text-xl font-semibold text-foreground">Dati Anagrafici</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input name="firstName" placeholder="Nome" required className="bg-background border-white/10 p-2 rounded-md text-white" />
-          <input name="lastName" placeholder="Cognome" required className="bg-background border-white/10 p-2 rounded-md text-white" />
+          <input name="firstName" placeholder="Nome" required className="bg-background border-border p-2 rounded-md text-foreground" />
+          <input name="lastName" placeholder="Cognome" required className="bg-background border-border p-2 rounded-md text-foreground" />
           <div className="relative">
-            <Phone className="absolute left-2 top-3 text-gray-500" size={16} />
-            <input name="phone" placeholder="Telefono" required className="pl-8 w-full bg-background border-white/10 p-2 rounded-md text-white" />
+            <Phone className="absolute left-2 top-3 text-muted-foreground" size={16} />
+            <input name="phone" placeholder="Telefono" required className="pl-8 w-full bg-background border-border p-2 rounded-md text-foreground" />
           </div>
           <div className="relative">
-            <Mail className="absolute left-2 top-3 text-gray-500" size={16} />
-            <input name="email" type="email" placeholder="Email (opzionale)" className="pl-8 w-full bg-background border-white/10 p-2 rounded-md text-white" />
+            <Mail className="absolute left-2 top-3 text-muted-foreground" size={16} />
+            <input name="email" type="email" placeholder="Email (opzionale)" className="pl-8 w-full bg-background border-border p-2 rounded-md text-foreground" />
           </div>
-          <input name="address" placeholder="Indirizzo" className="md:col-span-2 bg-background border-white/10 p-2 rounded-md text-white" />
+          <input name="address" placeholder="Indirizzo" className="md:col-span-2 bg-background border-border p-2 rounded-md text-foreground" />
         </div>
       </div>
 
       {/* SEZIONE VEICOLO */}
-      <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-        <div className="flex items-center gap-2 mb-6 text-green-400">
+      <div className="bg-background p-6 rounded-xl border border-border">
+        <div className="flex items-center gap-2 mb-6 text-success">
           <Car size={20} />
-          <h2 className="text-xl font-semibold text-white">Primo Veicolo</h2>
+          <h2 className="text-xl font-semibold text-foreground">Primo Veicolo</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input name="plate" placeholder="Targa (es. AB123CD)" required className="uppercase bg-background border-white/10 p-2 rounded-md text-white" />
-          <input name="brand" placeholder="Marca (es. Fiat)" required className="bg-background border-white/10 p-2 rounded-md text-white" />
-          <input name="model" placeholder="Modello (es. Panda)" required className="bg-background border-white/10 p-2 rounded-md text-white" />
-          <input name="year" type="number" placeholder="Anno" defaultValue={new Date().getFullYear()} className="bg-background border-white/10 p-2 rounded-md text-white" />
+          <input name="plate" placeholder="Targa (es. AB123CD)" required className="uppercase bg-background border-border p-2 rounded-md text-foreground" />
+          <input name="brand" placeholder="Marca (es. Fiat)" required className="bg-background border-border p-2 rounded-md text-foreground" />
+          <input name="model" placeholder="Modello (es. Panda)" required className="bg-background border-border p-2 rounded-md text-foreground" />
+          <input name="year" type="number" placeholder="Anno" defaultValue={new Date().getFullYear()} className="bg-background border-border p-2 rounded-md text-foreground" />
         </div>
       </div>
 
       {/* SEZIONE NOTE CRM AVANZATO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-blue-400 text-sm font-medium flex items-center gap-2">
+          <label className="text-blue-600 text-sm font-medium flex items-center gap-2">
             <FileText size={14} /> Note Tecniche (Meccanico)
           </label>
-          <textarea name="technicalNotes" rows={3} className="w-full bg-blue-500/5 border-blue-500/20 p-2 rounded-md text-white placeholder:text-blue-300/30" placeholder="Specifiche olio, modifiche, difetti ricorrenti..." />
+          <textarea name="technicalNotes" rows={3} className="w-full bg-blue-500/5 border-blue-500/20 p-2 rounded-md text-foreground placeholder:text-blue-300/30" placeholder="Specifiche olio, modifiche, difetti ricorrenti..." />
         </div>
         <div className="space-y-2">
-          <label className="text-amber-400 text-sm font-medium flex items-center gap-2">
+          <label className="text-warning text-sm font-medium flex items-center gap-2">
             <FileText size={14} /> Note Personali (Ufficio)
           </label>
-          <textarea name="familyNotes" rows={3} className="w-full bg-amber-500/5 border-amber-500/20 p-2 rounded-md text-white placeholder:text-amber-300/30" placeholder="Preferenze orari, rapporti familiari, note pagamenti..." />
+          <textarea name="familyNotes" rows={3} className="w-full bg-amber-500/5 border-amber-500/20 p-2 rounded-md text-foreground placeholder:text-warning/30" placeholder="Preferenze orari, rapporti familiari, note pagamenti..." />
         </div>
       </div>
 

@@ -23,7 +23,10 @@ const config: Config = {
         // Colori brand fissi (non dipendono dalle variabili CSS).
         primary: "#E30613",    // Rosso brand GT Service
         "primary-hover": "#B8050F", // Tono più scuro per hover
-        accent: "#2563eb",     // Blue-600
+        accent: "rgb(var(--accent))",   // nero brand
+        success: "rgb(var(--success))",
+        warning: "rgb(var(--warning))",
+        danger: "rgb(var(--danger))",
       },
       backgroundImage: {
         'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%)',

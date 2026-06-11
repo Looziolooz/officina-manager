@@ -6,7 +6,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* La Sidebar gestisce la sua larghezza internamente */}
       <Sidebar />
       

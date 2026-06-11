@@ -111,7 +111,7 @@ export default async function AuditLogPage({
             </select>
           </div>
           <div className="col-span-3 flex gap-2">
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+            <button type="submit" className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700 text-sm">
               Filtra
             </button>
             <Link href="/admin/audit" className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 text-sm">
@@ -126,32 +126,32 @@ export default async function AuditLogPage({
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data/Ora</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utente</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Azione</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrizione</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rischio</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stato</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Data/Ora</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Utente</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Azione</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Descrizione</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Rischio</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Stato</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {logs.map((log) => (
               <tr key={log.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {log.createdAt ? format(new Date(log.createdAt), "dd/MM/yyyy HH:mm:ss", { locale: it }) : "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <div className="font-medium text-gray-900">
                     {log.user ? log.user.name : log.userName || "Sistema"}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     {log.user?.email || log.userEmail}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {actionLabels[log.action] || log.action}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">
                   {log.description || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -171,7 +171,7 @@ export default async function AuditLogPage({
           </tbody>
         </table>
         {logs.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             Nessun log trovato
           </div>
         )}

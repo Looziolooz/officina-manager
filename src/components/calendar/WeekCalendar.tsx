@@ -49,15 +49,15 @@ export default function WeekCalendar({
   const goToNextWeek = () => onDateChange(addDays(currentDate, 7));
 
   return (
-    <div className="bg-slate-900/50 border border-white/10 rounded-2xl overflow-hidden">
+    <div className="bg-surface border border-border rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
             onClick={goToPreviousWeek}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-background rounded-lg transition-colors"
           >
-            <ChevronLeft size={20} className="text-white" />
+            <ChevronLeft size={20} className="text-foreground" />
           </button>
           
           <button 
@@ -70,12 +70,12 @@ export default function WeekCalendar({
           
           <button 
             onClick={goToNextWeek}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-background rounded-lg transition-colors"
           >
-            <ChevronRight size={20} className="text-white" />
+            <ChevronRight size={20} className="text-foreground" />
           </button>
           
-          <h2 className="text-white font-bold">
+          <h2 className="text-foreground font-bold">
             {format(weekStart, "d MMMM", { locale: it })} - {format(addDays(weekStart, 5), "d MMMM yyyy", { locale: it })}
           </h2>
         </div>
@@ -84,7 +84,7 @@ export default function WeekCalendar({
         <select 
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary outline-none"
+          className="bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:border-primary outline-none"
         >
           <option value="ALL">Tutti</option>
           <option value="SCHEDULED_WORK">Lavori programmati</option>
@@ -98,20 +98,20 @@ export default function WeekCalendar({
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           {/* Day headers */}
-          <div className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-white/10">
-            <div className="p-2 text-center text-xs text-gray-400">Ora</div>
+          <div className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-border">
+            <div className="p-2 text-center text-xs text-muted-foreground">Ora</div>
             {weekDays.map((day) => (
-              <div key={day.toISOString()} className="p-2 text-center border-l border-white/10">
-                <p className="text-xs text-gray-400">{format(day, "EEE", { locale: it })}</p>
-                <p className="text-lg font-bold text-white">{format(day, "d")}</p>
+              <div key={day.toISOString()} className="p-2 text-center border-l border-border">
+                <p className="text-xs text-muted-foreground">{format(day, "EEE", { locale: it })}</p>
+                <p className="text-lg font-bold text-foreground">{format(day, "d")}</p>
               </div>
             ))}
           </div>
 
           {/* Time slots */}
           {hours.map((hour) => (
-            <div key={hour} className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-white/5 hover:bg-white/[0.02]">
-              <div className="p-2 text-right text-xs text-gray-500 border-r border-white/10">
+            <div key={hour} className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-border hover:bg-white/[0.02]">
+              <div className="p-2 text-right text-xs text-muted-foreground border-r border-border">
                 {hour}:00
               </div>
               {weekDays.map((day) => {
@@ -119,7 +119,7 @@ export default function WeekCalendar({
                 return (
                   <div 
                     key={day.toISOString()} 
-                    className="p-1 border-l border-white/10 min-h-[60px] cursor-pointer hover:bg-white/[0.02]"
+                    className="p-1 border-l border-border min-h-[60px] cursor-pointer hover:bg-white/[0.02]"
                     onClick={() => {
                       const slotDate = new Date(day);
                       slotDate.setHours(hour, 0, 0, 0);

@@ -99,17 +99,17 @@ export default function NewInvoiceForm({ customers }: { customers: CustomerProp[
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <button type="button" onClick={() => router.back()} className="text-slate-400 hover:text-white flex items-center gap-2">
+      <button type="button" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground flex items-center gap-2">
         <ArrowLeft size={18} /> Annulla
       </button>
 
-      <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl space-y-6">
+      <div className="bg-surface border border-border p-6 rounded-3xl space-y-6">
         
         {/* Intestazione */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Cliente *</label>
-            <select name="customerId" required value={formData.customerId} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white">
+            <label className="text-xs uppercase font-bold text-muted-foreground mb-1 block">Cliente *</label>
+            <select name="customerId" required value={formData.customerId} onChange={handleChange} className="w-full bg-background border border-border rounded-xl p-3 text-foreground">
               <option value="">-- Seleziona Cliente --</option>
               {customers.map(c => (
                 <option key={c.id} value={c.id}>
@@ -119,8 +119,8 @@ export default function NewInvoiceForm({ customers }: { customers: CustomerProp[
             </select>
           </div>
           <div>
-             <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Metodo Pagamento</label>
-             <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white">
+             <label className="text-xs uppercase font-bold text-muted-foreground mb-1 block">Metodo Pagamento</label>
+             <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full bg-background border border-border rounded-xl p-3 text-foreground">
                {Object.keys(PaymentMethod).map(m => <option key={m} value={m}>{m}</option>)}
              </select>
           </div>
@@ -128,38 +128,38 @@ export default function NewInvoiceForm({ customers }: { customers: CustomerProp[
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Data Emissione</label>
-            <input type="date" name="issueDate" required value={formData.issueDate} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white"/>
+            <label className="text-xs uppercase font-bold text-muted-foreground mb-1 block">Data Emissione</label>
+            <input type="date" name="issueDate" required value={formData.issueDate} onChange={handleChange} className="w-full bg-background border border-border rounded-xl p-3 text-foreground"/>
           </div>
           <div>
-            <label className="text-xs uppercase font-bold text-slate-500 mb-1 block">Scadenza</label>
-            <input type="date" name="dueDate" required value={formData.dueDate} onChange={handleChange} className="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-white"/>
+            <label className="text-xs uppercase font-bold text-muted-foreground mb-1 block">Scadenza</label>
+            <input type="date" name="dueDate" required value={formData.dueDate} onChange={handleChange} className="w-full bg-background border border-border rounded-xl p-3 text-foreground"/>
           </div>
         </div>
 
-        <hr className="border-white/10" />
+        <hr className="border-border" />
 
         {/* Righe Fattura */}
         <div>
-           <h3 className="text-white font-bold mb-3">Righe Fattura</h3>
+           <h3 className="text-foreground font-bold mb-3">Righe Fattura</h3>
            <div className="space-y-3">
              {items.map((item, index) => (
-               <div key={index} className="grid grid-cols-12 gap-2 items-end bg-white/5 p-3 rounded-xl border border-white/5">
+               <div key={index} className="grid grid-cols-12 gap-2 items-end bg-background p-3 rounded-xl border border-border">
                  <div className="col-span-5">
-                    <label className="text-[10px] uppercase text-slate-500 block">Descrizione</label>
-                    <input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} className="w-full bg-transparent border-b border-white/20 text-white p-1 text-sm focus:border-orange-500 outline-none" placeholder="Descrizione prodotto/servizio" required />
+                    <label className="text-[10px] uppercase text-muted-foreground block">Descrizione</label>
+                    <input type="text" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} className="w-full bg-transparent border-b border-border text-foreground p-1 text-sm focus:border-orange-500 outline-none" placeholder="Descrizione prodotto/servizio" required />
                  </div>
                  <div className="col-span-2">
-                    <label className="text-[10px] uppercase text-slate-500 block">Qta</label>
-                    <input type="number" step="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="w-full bg-transparent border-b border-white/20 text-white p-1 text-sm font-mono text-center" />
+                    <label className="text-[10px] uppercase text-muted-foreground block">Qta</label>
+                    <input type="number" step="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} className="w-full bg-transparent border-b border-border text-foreground p-1 text-sm font-mono text-center" />
                  </div>
                  <div className="col-span-2">
-                    <label className="text-[10px] uppercase text-slate-500 block">Prezzo (€)</label>
-                    <input type="number" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} className="w-full bg-transparent border-b border-white/20 text-white p-1 text-sm font-mono text-right" />
+                    <label className="text-[10px] uppercase text-muted-foreground block">Prezzo (€)</label>
+                    <input type="number" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} className="w-full bg-transparent border-b border-border text-foreground p-1 text-sm font-mono text-right" />
                  </div>
                  <div className="col-span-2">
-                    <label className="text-[10px] uppercase text-slate-500 block">Sconto %</label>
-                    <input type="number" step="1" value={item.discount} onChange={(e) => handleItemChange(index, 'discount', e.target.value)} className="w-full bg-transparent border-b border-white/20 text-white p-1 text-sm font-mono text-center" />
+                    <label className="text-[10px] uppercase text-muted-foreground block">Sconto %</label>
+                    <input type="number" step="1" value={item.discount} onChange={(e) => handleItemChange(index, 'discount', e.target.value)} className="w-full bg-transparent border-b border-border text-foreground p-1 text-sm font-mono text-center" />
                  </div>
                  <div className="col-span-1 flex justify-center pb-2">
                    <button type="button" onClick={() => removeItem(index)} className="text-red-400 hover:text-red-300">
@@ -176,17 +176,17 @@ export default function NewInvoiceForm({ customers }: { customers: CustomerProp[
         </div>
 
         {/* Totali */}
-        <div className="flex flex-col items-end pt-4 border-t border-white/10">
+        <div className="flex flex-col items-end pt-4 border-t border-border">
           <div className="w-full md:w-1/3 space-y-2">
-            <div className="flex justify-between text-slate-400 text-sm">
+            <div className="flex justify-between text-muted-foreground text-sm">
               <span>Imponibile:</span>
               <span>€ {totals.subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-slate-400 text-sm">
+            <div className="flex justify-between text-muted-foreground text-sm">
               <span>IVA (22%):</span>
               <span>€ {totals.tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-white text-xl font-bold border-t border-white/10 pt-2 mt-2">
+            <div className="flex justify-between text-foreground text-xl font-bold border-t border-border pt-2 mt-2">
               <span>TOTALE:</span>
               <span>€ {totals.total.toFixed(2)}</span>
             </div>
@@ -196,7 +196,7 @@ export default function NewInvoiceForm({ customers }: { customers: CustomerProp[
         <button 
           type="submit" 
           disabled={isLoading}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-foreground font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
         >
           {isLoading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
           Emetti Fattura

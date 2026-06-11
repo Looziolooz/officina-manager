@@ -86,14 +86,14 @@ export default function SMSSettingsPage() {
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <h3 className="text-lg font-medium mb-4">Provider Configurati</h3>
         {providers.length === 0 ? (
-          <p className="text-gray-500">Nessun provider configurato</p>
+          <p className="text-muted-foreground">Nessun provider configurato</p>
         ) : (
           <div className="space-y-3">
             {providers.map((p) => (
               <div key={p.provider} className="border p-3 rounded flex justify-between items-center">
                 <div>
                   <p className="font-medium">{p.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Priorità: {p.priority} | Limite: {p.dailyLimit}/giorno | Costo: €{p.costPerSMS}/SMS
                   </p>
                 </div>
@@ -188,7 +188,7 @@ export default function SMSSettingsPage() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+          className="bg-blue-600 text-foreground px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
         >
           {loading ? "Salvataggio..." : "Salva Provider"}
         </button>

@@ -38,70 +38,70 @@ export default async function AccountingPage() {
     <div className="space-y-8 p-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter">Contabilità</h1>
-          <p className="text-gray-400 text-sm">Panoramica finanziaria dell'officina</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tighter">Contabilità</h1>
+          <p className="text-muted-foreground text-sm">Panoramica finanziaria dell'officina</p>
         </div>
       </div>
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Entrate */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <div className="bg-surface border border-border rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Entrate Totali</h3>
-            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+            <h3 className="text-muted-foreground font-medium">Entrate Totali</h3>
+            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-success">
               <ArrowUpCircle size={20} />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white">{formatCurrency(totalIncome)}</p>
-          <p className="text-xs text-green-400 mt-2">+ Fatture saldate</p>
+          <p className="text-3xl font-bold text-foreground">{formatCurrency(totalIncome)}</p>
+          <p className="text-xs text-success mt-2">+ Fatture saldate</p>
         </div>
 
         {/* Uscite */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <div className="bg-surface border border-border rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Spese Totali</h3>
+            <h3 className="text-muted-foreground font-medium">Spese Totali</h3>
             <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400">
               <ArrowDownCircle size={20} />
             </div>
           </div>
-          <p className="text-3xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
+          <p className="text-3xl font-bold text-foreground">{formatCurrency(totalExpenses)}</p>
           <p className="text-xs text-red-400 mt-2">- Spese registrate</p>
         </div>
 
         {/* Utile */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+        <div className="bg-surface border border-border rounded-2xl p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Utile Netto</h3>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${netProfit >= 0 ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`}>
+            <h3 className="text-muted-foreground font-medium">Utile Netto</h3>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${netProfit >= 0 ? 'bg-blue-500/20 text-blue-600' : 'bg-red-500/20 text-red-400'}`}>
               <Wallet size={20} />
             </div>
           </div>
-          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-white' : 'text-red-400'}`}>
+          <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-foreground' : 'text-red-400'}`}>
             {formatCurrency(netProfit)}
           </p>
-          <p className="text-xs text-gray-400 mt-2">Margine operativo</p>
+          <p className="text-xs text-muted-foreground mt-2">Margine operativo</p>
         </div>
       </div>
 
       {/* CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-1">
+        <div className="bg-surface border border-border rounded-2xl p-1">
            {/* FIX: Passiamo la prop 'data' corretta invece di income/expenses separati */}
            <FinancialCharts data={chartData} />
         </div>
         
         {/* Placeholder per futuri dettagli o lista ultime transazioni */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Note Rapide</h3>
-          <p className="text-gray-400 text-sm">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-foreground mb-4">Note Rapide</h3>
+          <p className="text-muted-foreground text-sm">
             Il calcolo delle entrate considera solo le fatture con stato <strong>PAGATO</strong>.
             Le fatture emesse ma non ancora saldate non vengono conteggiate nel flusso di cassa attuale.
           </p>
           <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3">
-             <DollarSign className="text-blue-400 shrink-0" />
-             <div className="text-sm text-gray-300">
-               <span className="text-blue-400 font-bold block mb-1">Consiglio</span>
+             <DollarSign className="text-blue-600 shrink-0" />
+             <div className="text-sm text-foreground">
+               <span className="text-blue-600 font-bold block mb-1">Consiglio</span>
                 Registra sempre le spese appena avvengono per avere un calcolo dell'utile preciso in tempo reale.
              </div>
           </div>

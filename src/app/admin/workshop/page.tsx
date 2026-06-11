@@ -24,8 +24,8 @@ export default async function WorkshopPage() {
       {/* HEADER */}
       <div className="flex justify-between items-center shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tighter">Officina</h1>
-          <p className="text-gray-400 text-sm">Gestione lavori e avanzamento</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tighter">Officina</h1>
+          <p className="text-muted-foreground text-sm">Gestione lavori e avanzamento</p>
         </div>
         <div className="flex gap-3">
           <Link

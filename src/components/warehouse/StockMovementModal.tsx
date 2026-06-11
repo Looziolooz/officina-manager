@@ -75,13 +75,13 @@ export default function StockMovementModal({ isOpen, onClose, part }: StockMovem
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md">
-        <div className="flex justify-between items-center p-4 border-b border-white/10">
-          <h3 className="text-white font-bold flex items-center gap-2">
+      <div className="bg-surface border border-border rounded-2xl w-full max-w-md">
+        <div className="flex justify-between items-center p-4 border-b border-border">
+          <h3 className="text-foreground font-bold flex items-center gap-2">
             <ArrowRightLeft className="text-primary" size={20} />
             Movimento Magazzino
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X size={20} />
           </button>
         </div>
@@ -96,17 +96,17 @@ export default function StockMovementModal({ isOpen, onClose, part }: StockMovem
             </div>
           )}
 
-          <div className="bg-slate-800/50 p-3 rounded-lg border border-white/5 mb-4">
-            <p className="text-xs text-gray-400">Articolo</p>
-            <p className="text-white font-bold">{part.name}</p>
-            <p className="text-xs text-gray-500">{part.code} • Attuali: {part.stock} pz</p>
+          <div className="bg-background/50 p-3 rounded-lg border border-border mb-4">
+            <p className="text-xs text-muted-foreground">Articolo</p>
+            <p className="text-foreground font-bold">{part.name}</p>
+            <p className="text-xs text-muted-foreground">{part.code} • Attuali: {part.stock} pz</p>
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Tipo Movimento</label>
+            <label className="block text-sm text-muted-foreground mb-1">Tipo Movimento</label>
             <select 
               {...register("type")}
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
             >
               <option value="IN">Carico (+)</option>
               <option value="OUT">Scarico (-)</option>
@@ -115,24 +115,24 @@ export default function StockMovementModal({ isOpen, onClose, part }: StockMovem
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Quantità</label>
+            <label className="block text-sm text-muted-foreground mb-1">Quantità</label>
             <input 
               type="number" 
               step="1"
               min="1"
               {...register("quantity", { valueAsNumber: true, min: { value: 1, message: "Minimo 1" } })}
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
             />
             {/* FIX: Mostriamo errori di validazione del campo */}
             {errors.quantity && <p className="text-red-400 text-xs mt-1">{errors.quantity.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Causale / Note</label>
+            <label className="block text-sm text-muted-foreground mb-1">Causale / Note</label>
             <input 
               {...register("reason")}
               placeholder="Es. Acquisto fornitore, Rottura, etc."
-              className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+              className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
             />
           </div>
 

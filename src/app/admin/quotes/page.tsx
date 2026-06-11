@@ -38,7 +38,7 @@ export default async function QuotesPage({
         <h1 className="text-2xl font-bold">Preventivi</h1>
         <Link
           href="/admin/quotes/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700"
         >
           Nuovo Preventivo
         </Link>
@@ -48,7 +48,7 @@ export default async function QuotesPage({
       <div className="mb-4 flex gap-2">
         <Link
           href="/admin/quotes"
-          className={`px-3 py-1 rounded ${!statusFilter ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+          className={`px-3 py-1 rounded ${!statusFilter ? "bg-blue-600 text-foreground" : "bg-gray-200"}`}
         >
           Tutti
         </Link>
@@ -56,7 +56,7 @@ export default async function QuotesPage({
           <Link
             key={key}
             href={`/admin/quotes?status=${key}`}
-            className={`px-3 py-1 rounded ${statusFilter === key ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+            className={`px-3 py-1 rounded ${statusFilter === key ? "bg-blue-600 text-foreground" : "bg-gray-200"}`}
           >
             {label}
           </Link>
@@ -68,25 +68,25 @@ export default async function QuotesPage({
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Numero
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Cliente
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Veicolo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Totale
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Stato
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Scadenza
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Azioni
               </th>
             </tr>
@@ -97,13 +97,13 @@ export default async function QuotesPage({
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {quote.quoteNumber}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {quote.customer.firstName} {quote.customer.lastName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {quote.vehicle.plate} - {quote.vehicle.brand} {quote.vehicle.modelName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   € {(quote.total ?? 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -111,7 +111,7 @@ export default async function QuotesPage({
                     {statusLabels[quote.status ?? "DRAFT"] || quote.status || "DRAFT"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -127,7 +127,7 @@ export default async function QuotesPage({
           </tbody>
         </table>
         {quotes.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             Nessun preventivo trovato
           </div>
         )}

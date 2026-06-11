@@ -4,7 +4,7 @@ import { formatCurrency } from "@/lib/utils";
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <p className="text-sm text-gray-500 py-6 text-center">{message}</p>
+    <p className="text-sm text-muted-foreground py-6 text-center">{message}</p>
   );
 }
 
@@ -25,10 +25,10 @@ type TopCustomer = {
 
 export function TopPartsWidget({ parts }: { parts: TopPart[] }) {
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/10 p-6">
+    <div className="rounded-2xl bg-surface border border-border p-6">
       <div className="flex items-center gap-3 mb-6">
-        <Trophy className="text-yellow-400" />
-        <h3 className="text-lg font-bold text-white">Top Ricambi</h3>
+        <Trophy className="text-warning" />
+        <h3 className="text-lg font-bold text-foreground">Top Ricambi</h3>
       </div>
       <div className="space-y-4">
         {parts.length === 0 ? (
@@ -39,11 +39,11 @@ export function TopPartsWidget({ parts }: { parts: TopPart[] }) {
               <div className="flex items-center gap-3">
                 <span className="font-bold text-yellow-500 w-4">#{i+1}</span>
                 <div>
-                  <p className="text-white font-medium">{p.name}</p>
-                  <p className="text-xs text-gray-500">{p.code}</p>
+                  <p className="text-foreground font-medium">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">{p.code}</p>
                 </div>
               </div>
-              <span className="text-green-400 font-mono font-bold">{formatCurrency(p.revenue)}</span>
+              <span className="text-success font-mono font-bold">{formatCurrency(p.revenue)}</span>
             </div>
           ))
         )}
@@ -54,10 +54,10 @@ export function TopPartsWidget({ parts }: { parts: TopPart[] }) {
 
 export function TopCustomersWidget({ customers }: { customers: TopCustomer[] }) {
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/10 p-6">
+    <div className="rounded-2xl bg-surface border border-border p-6">
       <div className="flex items-center gap-3 mb-6">
-        <Users className="text-blue-400" />
-        <h3 className="text-lg font-bold text-white">Top Clienti</h3>
+        <Users className="text-blue-600" />
+        <h3 className="text-lg font-bold text-foreground">Top Clienti</h3>
       </div>
       <div className="space-y-4">
         {customers.length === 0 ? (
@@ -66,15 +66,15 @@ export function TopCustomersWidget({ customers }: { customers: TopCustomer[] }) 
           customers.map((c, i) => (
             <div key={i} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xs border border-white/10">
+                <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-foreground font-bold text-xs border border-border">
                   {c.name.substring(0,2).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-white font-medium">{c.name}</p>
-                  <p className="text-xs text-gray-500">{c.invoiceCount} fatture</p>
+                  <p className="text-foreground font-medium">{c.name}</p>
+                  <p className="text-xs text-muted-foreground">{c.invoiceCount} fatture</p>
                 </div>
               </div>
-              <span className="text-emerald-400 font-mono font-bold">{formatCurrency(c.totalSpent)}</span>
+              <span className="text-success font-mono font-bold">{formatCurrency(c.totalSpent)}</span>
             </div>
           ))
         )}

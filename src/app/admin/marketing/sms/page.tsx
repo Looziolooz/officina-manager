@@ -58,7 +58,7 @@ export default async function SMSMarketingPage({
         <h1 className="text-2xl font-bold">SMS Marketing</h1>
         <Link
           href="/admin/marketing/sms/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700"
         >
           Nuova Campagna
         </Link>
@@ -68,13 +68,13 @@ export default async function SMSMarketingPage({
       <div className="flex gap-4 mb-6 border-b">
         <Link
           href="/admin/marketing/sms?tab=campaigns"
-          className={`pb-2 px-1 ${tab === "campaigns" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
+          className={`pb-2 px-1 ${tab === "campaigns" ? "border-b-2 border-blue-600 text-blue-600" : "text-muted-foreground"}`}
         >
           Campagne
         </Link>
         <Link
           href="/admin/marketing/sms?tab=messages"
-          className={`pb-2 px-1 ${tab === "messages" ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"}`}
+          className={`pb-2 px-1 ${tab === "messages" ? "border-b-2 border-blue-600 text-blue-600" : "text-muted-foreground"}`}
         >
           Storico Messaggi
         </Link>
@@ -85,19 +85,19 @@ export default async function SMSMarketingPage({
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Nome
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Stato
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Programmata per
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Inviati
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Azioni
                 </th>
               </tr>
@@ -113,10 +113,10 @@ export default async function SMSMarketingPage({
                       {statusLabels[campaign.status || "DRAFT"]}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {format(new Date(campaign.scheduledFor), "dd/MM/yyyy HH:mm", { locale: it })}
                   </td>
-                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                      {campaign.totalSent} / {campaign.targetCustomerIds ? JSON.parse(campaign.targetCustomerIds).length : 0}
                    </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -144,7 +144,7 @@ export default async function SMSMarketingPage({
             </tbody>
           </table>
           {campaigns.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Nessuna campagna trovata
             </div>
           )}
@@ -156,19 +156,19 @@ export default async function SMSMarketingPage({
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Destinatario
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Telefono
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Tipo
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Stato
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Data
                 </th>
               </tr>
@@ -181,10 +181,10 @@ export default async function SMSMarketingPage({
                       ? `${msg.customer.firstName} ${msg.customer.lastName}`
                       : "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {msg.phoneNumber}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {msg.type}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -198,7 +198,7 @@ export default async function SMSMarketingPage({
                       {msg.status}
                     </span>
                   </td>
-                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                      {msg.createdAt ? format(new Date(msg.createdAt), "dd/MM/yyyy HH:mm", { locale: it }) : "-"}
                    </td>
                 </tr>
@@ -206,7 +206,7 @@ export default async function SMSMarketingPage({
             </tbody>
           </table>
           {messages.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Nessun messaggio trovato
             </div>
           )}

@@ -175,7 +175,7 @@ export default function EditUserPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="bg-blue-600 text-foreground px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           >
             {loading ? "Salvataggio..." : "Salva Modifiche"}
           </button>
@@ -188,7 +188,7 @@ export default function EditUserPage() {
         {!showPasswordForm ? (
           <button
             onClick={() => setShowPasswordForm(true)}
-            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+            className="bg-yellow-600 text-foreground px-4 py-2 rounded hover:bg-yellow-700"
           >
             Cambia Password
           </button>
@@ -207,7 +207,7 @@ export default function EditUserPage() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-green-600 text-foreground px-4 py-2 rounded hover:bg-green-700"
               >
                 Salva Password
               </button>
@@ -231,7 +231,7 @@ export default function EditUserPage() {
         <h3 className="text-lg font-medium mb-4">Autenticazione a Due Fattori (2FA)</h3>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Stato: {user.twoFactorEnabled ? "Attivo" : "Disattivo"}
             </p>
           </div>
@@ -239,8 +239,8 @@ export default function EditUserPage() {
             onClick={handleToggle2FA}
             className={`px-4 py-2 rounded ${
               user.twoFactorEnabled
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-green-600 text-white hover:bg-green-700"
+                ? "bg-red-600 text-foreground hover:bg-red-700"
+                : "bg-green-600 text-foreground hover:bg-green-700"
             }`}
           >
             {user.twoFactorEnabled ? "Disattiva 2FA" : "Attiva 2FA"}

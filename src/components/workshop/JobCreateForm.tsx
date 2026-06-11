@@ -99,36 +99,36 @@ export default function JobCreateForm() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-foreground mb-6 pb-4 border-b border-border">
             Dettagli Intervento
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm text-gray-400 mb-1">Titolo Intervento *</label>
+              <label className="block text-sm text-muted-foreground mb-1">Titolo Intervento *</label>
               <input
                 {...register("title")}
                 placeholder="Es. Tagliando Completo"
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
               {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message as string}</p>}
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm text-gray-400 mb-1">Descrizione</label>
+              <label className="block text-sm text-muted-foreground mb-1">Descrizione</label>
               <textarea
                 {...register("description")}
                 rows={3}
                 placeholder="Dettagli aggiuntivi..."
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
 
             <div>
-               <label className="block text-sm text-gray-400 mb-1">Veicolo *</label>
+               <label className="block text-sm text-muted-foreground mb-1">Veicolo *</label>
                <select
                  {...register("vehicleId")}
-                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                 className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                >
                  <option value="">Seleziona veicolo...</option>
                  {vehicles.map((v) => (
@@ -141,10 +141,10 @@ export default function JobCreateForm() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Tipo Manutenzione</label>
+              <label className="block text-sm text-muted-foreground mb-1">Tipo Manutenzione</label>
               <select
                 {...register("maintenanceType")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               >
                 <option value="">Altro / Generico</option>
                 <option value="OIL_CHANGE">Cambio Olio</option>
@@ -158,20 +158,20 @@ export default function JobCreateForm() {
             </div>
             
             <div>
-               <label className="block text-sm text-gray-400 mb-1">Data Programmata *</label>
+               <label className="block text-sm text-muted-foreground mb-1">Data Programmata *</label>
                <input
                  type="datetime-local"
                  {...register("scheduledDate")}
-                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none scheme-dark"
+                 className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none scheme-dark"
                />
                {errors.scheduledDate && <p className="text-red-400 text-xs mt-1">{errors.scheduledDate.message as string}</p>}
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Priorità</label>
+              <label className="block text-sm text-muted-foreground mb-1">Priorità</label>
               <select
                 {...register("priority")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               >
                 <option value="0">Bassa</option>
                 <option value="1">Media</option>
@@ -181,27 +181,27 @@ export default function JobCreateForm() {
           </div>
         </div>
 
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-foreground mb-6 pb-4 border-b border-border">
             Stato Veicolo all&apos;Ingresso
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div>
-               <label className="block text-sm text-gray-400 mb-1">Km Attuali *</label>
+               <label className="block text-sm text-muted-foreground mb-1">Km Attuali *</label>
                <input
                  type="number"
                  {...register("kmAtEntry")}
-                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                 className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                />
                {errors.kmAtEntry && <p className="text-red-400 text-xs mt-1">{errors.kmAtEntry.message as string}</p>}
              </div>
 
              <div>
-               <label className="block text-sm text-gray-400 mb-1">Livello Carburante (%)</label>
+               <label className="block text-sm text-muted-foreground mb-1">Livello Carburante (%)</label>
                <input
                  type="number"
                  {...register("fuelLevel")}
-                 className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                 className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
                />
              </div>
           </div>

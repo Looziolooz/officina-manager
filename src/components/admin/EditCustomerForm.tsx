@@ -72,11 +72,11 @@ export default function EditCustomerForm({ customer }: EditCustomerFormProps) {
       <div className="flex items-center gap-4 mb-8">
         <Link
           href={`/admin/customers/${customer.id}`}
-          className="text-gray-400 hover:text-white flex items-center gap-2"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-2"
         >
           <ArrowLeft size={20} /> Torna al Profilo
         </Link>
-        <h1 className="text-3xl font-bold text-white">Modifica Cliente</h1>
+        <h1 className="text-3xl font-bold text-foreground">Modifica Cliente</h1>
       </div>
 
       {serverError && (
@@ -88,107 +88,107 @@ export default function EditCustomerForm({ customer }: EditCustomerFormProps) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* SEZIONE 1: DATI ANAGRAFICI */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-foreground mb-6 pb-4 border-b border-border">
             Dati Anagrafici
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Nome *</label>
+              <label className="block text-sm text-muted-foreground mb-1">Nome *</label>
               <input
                 {...register("firstName")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
               {errors.firstName && (
                 <p className="text-red-400 text-xs mt-1">{errors.firstName.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Cognome *</label>
+              <label className="block text-sm text-muted-foreground mb-1">Cognome *</label>
               <input
                 {...register("lastName")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
               {errors.lastName && (
                 <p className="text-red-400 text-xs mt-1">{errors.lastName.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
+              <label className="block text-sm text-muted-foreground mb-1">Telefono *</label>
               <input
                 {...register("phone")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
               {errors.phone && (
                 <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Email</label>
+              <label className="block text-sm text-muted-foreground mb-1">Email</label>
               <input
                 {...register("email")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
               {errors.email && (
                 <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>
               )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm text-gray-400 mb-1">Indirizzo</label>
+              <label className="block text-sm text-muted-foreground mb-1">Indirizzo</label>
               <input
                 {...register("address")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
           </div>
         </div>
 
         {/* SEZIONE 2: DATI FISCALI */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-white/10">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-foreground mb-6 pb-4 border-b border-border">
             Dati Fiscali (Opzionali)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Ragione Sociale</label>
+              <label className="block text-sm text-muted-foreground mb-1">Ragione Sociale</label>
               <input
                 {...register("companyName")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Partita IVA</label>
+              <label className="block text-sm text-muted-foreground mb-1">Partita IVA</label>
               <input
                 {...register("vatNumber")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Codice Fiscale</label>
+              <label className="block text-sm text-muted-foreground mb-1">Codice Fiscale</label>
               <input
                 {...register("fiscalCode")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Codice Univoco (SDI)</label>
+              <label className="block text-sm text-muted-foreground mb-1">Codice Univoco (SDI)</label>
               <input
                 {...register("sdiCode")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">PEC</label>
+              <label className="block text-sm text-muted-foreground mb-1">PEC</label>
               <input
                 {...register("pec")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Città</label>
+              <label className="block text-sm text-muted-foreground mb-1">Città</label>
               <input
                 {...register("city")}
-                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none"
+                className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none"
               />
             </div>
           </div>

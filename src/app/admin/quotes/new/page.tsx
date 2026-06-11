@@ -206,7 +206,7 @@ export default function NewQuotePage() {
             <button
               type="button"
               onClick={addItem}
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+              className="bg-green-600 text-foreground px-3 py-1 rounded text-sm hover:bg-green-700"
             >
               + Aggiungi Articolo
             </button>
@@ -304,7 +304,7 @@ export default function NewQuotePage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="bg-blue-600 text-foreground px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
           >
             {loading ? "Salvataggio..." : "Crea Preventivo"}
           </button>

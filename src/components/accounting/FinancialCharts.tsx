@@ -20,8 +20,8 @@ interface FinancialChartsProps {
 export default function FinancialCharts({ data }: FinancialChartsProps) {
   return (
     // FIX: Aggiornato h-[300px] a h-75 come suggerito da Tailwind
-    <div className="h-75 w-full bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-      <h3 className="text-lg font-bold text-white mb-6">Andamento Mensile</h3>
+    <div className="h-75 w-full bg-surface border border-border rounded-2xl p-6">
+      <h3 className="text-lg font-bold text-foreground mb-6">Andamento Mensile</h3>
       
       {/* FIX: Aggiornato h-[250px] a h-62.5 come suggerito da Tailwind */}
       <div className="h-62.5 w-full">

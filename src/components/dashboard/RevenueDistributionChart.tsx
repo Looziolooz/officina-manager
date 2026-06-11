@@ -10,11 +10,11 @@ export function RevenueDistributionChart({ laborRevenue, partsRevenue }: { labor
   const isEmpty = laborRevenue + partsRevenue <= 0;
 
   return (
-    <div className="rounded-2xl bg-slate-900 border border-white/10 p-6 h-full">
-      <h3 className="text-lg font-bold text-white mb-6">Distribuzione Entrate (ultimi 30 giorni)</h3>
+    <div className="rounded-2xl bg-surface border border-border p-6 h-full">
+      <h3 className="text-lg font-bold text-foreground mb-6">Distribuzione Entrate (ultimi 30 giorni)</h3>
       <div className="h-75">
         {isEmpty ? (
-          <div className="h-full flex items-center justify-center text-sm text-gray-500 text-center px-4">
+          <div className="h-full flex items-center justify-center text-sm text-muted-foreground text-center px-4">
             Nessuna entrata negli ultimi 30 giorni.
           </div>
         ) : (

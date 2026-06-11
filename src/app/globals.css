@@ -4,21 +4,25 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  /* Tech Utility – OKLch palette (from open-design) - using RGB fallbacks */
-  --background: 244 244 245;    /* Fallback RGB for oklch(98% 0.005 250) */
-  --foreground: 40 42 48;      /* Fallback RGB for oklch(22% 0.02 240) */
-  --surface: 255 255 255;      /* Fallback RGB for oklch(100% 0 0) */
-  --muted: 128 130 137;        /* Fallback RGB for oklch(50% 0.018 240) */
-  --border: 225 226 228;       /* Fallback RGB for oklch(90% 0.008 240) */
-  --primary: 34 197 94;        /* Fallback RGB for oklch(58% 0.16 145) - green */
-  --primary-foreground: 255 255 255;
-  --secondary: 15 23 42;       /* Slate-950 */
+  /* === Palette GT Service — tema chiaro (rosso #E30613 + nero + bianco) === */
+  --background: 245 245 247;        /* #F5F5F7  sfondo app, grigio chiarissimo */
+  --foreground: 26 26 26;           /* #1A1A1A  testo, nero brand del logo */
+  --surface: 255 255 255;           /* #FFFFFF  card e superfici */
+  --muted: 113 113 122;             /* #71717A  testo secondario */
+  --muted-foreground: 113 113 122;  /* #71717A */
+  --border: 228 228 231;            /* #E4E4E7  bordi sottili */
+  --input: 228 228 231;             /* #E4E4E7  bordo input */
+  --primary: 227 6 19;              /* #E30613  rosso brand */
+  --primary-foreground: 255 255 255;/* bianco su rosso */
+  --secondary: 26 26 26;            /* #1A1A1A  nero brand */
   --secondary-foreground: 255 255 255;
-  --accent: 34 197 94;
+  --accent: 26 26 26;               /* #1A1A1A  accento scuro */
   --accent-foreground: 255 255 255;
-  --muted-foreground: 128 130 137;
-  --input: 225 226 228;
-  --ring: 34 197 94;
+  --ring: 227 6 19;                 /* focus rosso */
+  /* Stati */
+  --success: 22 163 74;             /* #16A34A  verde */
+  --warning: 245 158 11;            /* #F59E0B  ambra */
+  --danger: 220 38 38;              /* #DC2626  rosso azione distruttiva */
 }
 
 body {

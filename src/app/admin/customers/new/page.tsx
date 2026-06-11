@@ -176,19 +176,19 @@ export default function NewCustomerPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/customers" className="text-gray-400 hover:text-white">
+        <Link href="/admin/customers" className="text-muted-foreground hover:text-foreground">
            ← Torna indietro
         </Link>
-        <h1 className="text-3xl font-bold text-white">Nuovo Cliente</h1>
+        <h1 className="text-3xl font-bold text-foreground">Nuovo Cliente</h1>
       </div>
 
       {/* SCAN LIBRETTO: precompila il form dalla foto del libretto */}
-      <div className="bg-slate-900/50 border border-dashed border-primary/40 rounded-2xl p-6 mb-6">
+      <div className="bg-surface border border-dashed border-primary/40 rounded-2xl p-6 mb-6">
         <div className="flex items-center gap-3 mb-2">
           <ScanLine className="text-primary" size={24} />
-          <h2 className="text-xl font-bold text-white">Compila dal libretto</h2>
+          <h2 className="text-xl font-bold text-foreground">Compila dal libretto</h2>
         </div>
-        <p className="text-sm text-gray-400 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Scatta una foto, oppure carica la <strong>scansione della fotocopiatrice</strong> (PDF o
           immagine) del libretto di circolazione: i campi qui sotto verranno compilati
           automaticamente. Controlla sempre i dati prima di salvare. Telefono e km non sono sul
@@ -199,7 +199,7 @@ export default function NewCustomerPage() {
           <label
             className={`inline-flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all ${
               scanState === "loading"
-                ? "bg-white/10 text-gray-400 cursor-wait"
+                ? "bg-background text-muted-foreground cursor-wait"
                 : "bg-primary hover:bg-primary-hover text-white"
             }`}
           >
@@ -226,8 +226,8 @@ export default function NewCustomerPage() {
           <label
             className={`inline-flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all border ${
               scanState === "loading"
-                ? "border-white/10 text-gray-500 cursor-wait"
-                : "border-white/20 text-white hover:bg-white/5"
+                ? "border-border text-muted-foreground cursor-wait"
+                : "border-border text-foreground hover:bg-background"
             }`}
           >
             <input
@@ -243,7 +243,7 @@ export default function NewCustomerPage() {
         {scanMessage && (
           <div
             className={`mt-4 text-sm flex items-start gap-2 ${
-              scanState === "error" ? "text-red-400" : "text-green-400"
+              scanState === "error" ? "text-red-400" : "text-success"
             }`}
           >
             {scanState === "error" ? (
@@ -265,71 +265,71 @@ export default function NewCustomerPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* SEZIONE 1: CLIENTE */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
             <User className="text-primary" size={24} />
-            <h2 className="text-xl font-bold text-white">Anagrafica Cliente</h2>
+            <h2 className="text-xl font-bold text-foreground">Anagrafica Cliente</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Nome *</label>
-              <input {...register("firstName")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Mario" />
+              <label className="block text-sm text-muted-foreground mb-1">Nome *</label>
+              <input {...register("firstName")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="Mario" />
               {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName.message as string}</p>}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Cognome *</label>
-              <input {...register("lastName")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Rossi" />
+              <label className="block text-sm text-muted-foreground mb-1">Cognome *</label>
+              <input {...register("lastName")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="Rossi" />
               {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName.message as string}</p>}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Telefono *</label>
-              <input {...register("phone")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="+39 333..." />
+              <label className="block text-sm text-muted-foreground mb-1">Telefono *</label>
+              <input {...register("phone")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="+39 333..." />
               {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message as string}</p>}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Email</label>
-              <input {...register("email")} type="email" className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="mario@email.com" />
+              <label className="block text-sm text-muted-foreground mb-1">Email</label>
+              <input {...register("email")} type="email" className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="mario@email.com" />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message as string}</p>}
             </div>
           </div>
           
           <div className="mt-4">
-             <label className="block text-sm text-gray-400 mb-1">Note Tecniche (Opzionale)</label>
-             <textarea {...register("technicalNotes")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" rows={2} placeholder="Es. Preferisce ricambi originali..." />
+             <label className="block text-sm text-muted-foreground mb-1">Note Tecniche (Opzionale)</label>
+             <textarea {...register("technicalNotes")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" rows={2} placeholder="Es. Preferisce ricambi originali..." />
           </div>
         </div>
 
         {/* SEZIONE 2: VEICOLO */}
-        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+        <div className="bg-surface border border-border rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-border pb-4">
             <Car className="text-primary" size={24} />
-            <h2 className="text-xl font-bold text-white">Dati Veicolo</h2>
+            <h2 className="text-xl font-bold text-foreground">Dati Veicolo</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Targa *</label>
-              <input {...register("plate")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white uppercase font-mono focus:border-primary outline-none" placeholder="AB123CD" />
+              <label className="block text-sm text-muted-foreground mb-1">Targa *</label>
+              <input {...register("plate")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground uppercase font-mono focus:border-primary outline-none" placeholder="AB123CD" />
               {errors.plate && <p className="text-red-400 text-xs mt-1">{errors.plate.message as string}</p>}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Marca *</label>
-              <input {...register("brand")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Fiat" />
+              <label className="block text-sm text-muted-foreground mb-1">Marca *</label>
+              <input {...register("brand")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="Fiat" />
               {errors.brand && <p className="text-red-400 text-xs mt-1">{errors.brand.message as string}</p>}
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Modello *</label>
-              <input {...register("model")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" placeholder="Panda" />
+              <label className="block text-sm text-muted-foreground mb-1">Modello *</label>
+              <input {...register("model")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" placeholder="Panda" />
               {errors.model && <p className="text-red-400 text-xs mt-1">{errors.model.message as string}</p>}
             </div>
             <div>
-               <label className="block text-sm text-gray-400 mb-1">Anno</label>
-               <input {...register("year")} type="number" className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none" />
+               <label className="block text-sm text-muted-foreground mb-1">Anno</label>
+               <input {...register("year")} type="number" className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none" />
             </div>
             <div>
-               <label className="block text-sm text-gray-400 mb-1">Alimentazione</label>
-               <select {...register("fuelType")} className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-primary outline-none">
+               <label className="block text-sm text-muted-foreground mb-1">Alimentazione</label>
+               <select {...register("fuelType")} className="w-full bg-background border border-border rounded-lg p-3 text-foreground focus:border-primary outline-none">
                   <option value="Diesel">Diesel</option>
                   <option value="Benzina">Benzina</option>
                   <option value="Ibrida">Ibrida</option>

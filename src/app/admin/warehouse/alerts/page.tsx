@@ -40,7 +40,7 @@ export default async function StockAlertsPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">Avvisi Magazzino</h1>
           {unreadCount > 0 && (
-            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+            <span className="bg-red-600 text-foreground text-xs px-2 py-1 rounded-full">
               {unreadCount} nuovi
             </span>
           )}
@@ -50,7 +50,7 @@ export default async function StockAlertsPage() {
             <form action={handleMarkAllRead}>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700 text-sm"
               >
                 Segna tutte come lette
               </button>
@@ -67,7 +67,7 @@ export default async function StockAlertsPage() {
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
         {alerts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             Nessun avviso presente
           </div>
         ) : (
@@ -98,13 +98,13 @@ export default async function StockAlertsPage() {
                           : alert.alertType}
                       </span>
                       {!alert.isRead && (
-                        <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded">
+                        <span className="bg-blue-600 text-foreground text-xs px-2 py-0.5 rounded">
                           NUOVO
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-gray-900 mb-1">{alert.message}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>
                         Ricambio:{" "}
                         <Link
@@ -122,7 +122,7 @@ export default async function StockAlertsPage() {
                       </span>
                     </div>
                     {alert.readById && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Letto da {alert.readById} il{" "}
                         {alert.readAt?.toLocaleDateString()}
                       </p>

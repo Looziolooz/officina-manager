@@ -67,21 +67,21 @@ export default function QuickInventory() {
   const getIcon = (category: string) => {
     const cat = (category || "").toLowerCase();
     if (cat.includes("olio")) return <Droplet className="text-amber-500" size={18} />;
-    if (cat.includes("freni") || cat.includes("dischi")) return <Disc className="text-slate-400" size={18} />;
-    if (cat.includes("filtri")) return <Filter className="text-blue-400" size={18} />;
+    if (cat.includes("freni") || cat.includes("dischi")) return <Disc className="text-muted-foreground" size={18} />;
+    if (cat.includes("filtri")) return <Filter className="text-blue-600" size={18} />;
     return <Zap className="text-primary" size={18} />;
   };
 
   return (
-    <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 h-full">
+    <div className="bg-surface border border-border rounded-2xl p-6 h-full">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Zap size={20} className="text-yellow-400" />
+        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <Zap size={20} className="text-warning" />
           Magazzino Rapido
         </h3>
         <button 
           onClick={refreshStock} 
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
           title="Aggiorna"
         >
           <RefreshCw size={16} />
@@ -92,16 +92,16 @@ export default function QuickInventory() {
         {stocks.map((item) => (
           <div 
             key={item.id} 
-            className="flex items-center justify-between bg-black/20 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-all"
+            className="flex items-center justify-between bg-background p-3 rounded-xl border border-border hover:border-border transition-all"
           >
             <div className="flex items-center gap-3">
-              <div className="bg-slate-800 p-2 rounded-lg">
+              <div className="bg-background p-2 rounded-lg">
                 {getIcon(item.category)}
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{item.name}</p>
+                <p className="text-sm font-bold text-foreground">{item.name}</p>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-500">{item.code}</span>
+                  <span className="text-muted-foreground">{item.code}</span>
                   {item.stock <= item.minStock && (
                     <span className="text-red-400 font-bold bg-red-500/10 px-1.5 py-0.5 rounded">Low</span>
                   )}
@@ -111,16 +111,16 @@ export default function QuickInventory() {
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <span className={`text-lg font-mono font-bold ${item.stock <= item.minStock ? 'text-red-400' : 'text-white'}`}>
+                <span className={`text-lg font-mono font-bold ${item.stock <= item.minStock ? 'text-red-400' : 'text-foreground'}`}>
                   {item.stock}
                 </span>
-                <span className="text-xs text-gray-500 block">pz.</span>
+                <span className="text-xs text-muted-foreground block">pz.</span>
               </div>
               
               <button
                 onClick={() => handleQuickUse(item.id)}
                 disabled={isLoading || item.stock <= 0}
-                className="w-8 h-8 flex items-center justify-center bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Scarica 1 pz"
               >
                 <Minus size={16} />
@@ -130,7 +130,7 @@ export default function QuickInventory() {
         ))}
 
         {stocks.length === 0 && (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             Nessun ricambio rapido trovato.
           </div>
         )}

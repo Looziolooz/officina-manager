@@ -75,7 +75,7 @@ export default async function ReportsPage({
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Reportistica</h1>
-        <Link href="/admin/reports/export" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
+        <Link href="/admin/reports/export" className="bg-green-600 text-foreground px-4 py-2 rounded hover:bg-green-700 text-sm">
           Esporta Dati
         </Link>
       </div>
@@ -99,7 +99,7 @@ export default async function ReportsPage({
               ))}
             </select>
           </div>
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+          <button type="submit" className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700 text-sm">
             Aggiorna
           </button>
         </form>
@@ -108,19 +108,19 @@ export default async function ReportsPage({
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Lavori Totali</h3>
+          <h3 className="text-sm text-muted-foreground">Lavori Totali</h3>
           <p className="text-2xl font-bold">{totalJobs}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Lavori Completati</h3>
+          <h3 className="text-sm text-muted-foreground">Lavori Completati</h3>
           <p className="text-2xl font-bold text-green-600">{completedJobs}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Ricavi</h3>
+          <h3 className="text-sm text-muted-foreground">Ricavi</h3>
           <p className="text-2xl font-bold text-blue-600">€ {(totalRevenue._sum.total || 0).toFixed(2)}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Utile</h3>
+          <h3 className="text-sm text-muted-foreground">Utile</h3>
           <p className={`text-2xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
             € {profit.toFixed(2)}
           </p>
@@ -148,7 +148,7 @@ export default async function ReportsPage({
             {topCustomers.slice(0, 5).map((c, i) => (
               <div key={c.id} className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">{i + 1}.</span>
+                  <span className="text-sm text-muted-foreground">{i + 1}.</span>
                   <span className="text-sm">{c.firstName} {c.lastName}</span>
                 </div>
                 <span className="text-sm font-medium">€ {((c.invoices as any)?._sum?.total || 0).toFixed(2)}</span>
@@ -185,9 +185,9 @@ export default async function ReportsPage({
         <table className="min-w-full">
           <thead>
             <tr>
-              <th className="text-left text-xs text-gray-500">Codice</th>
-              <th className="text-left text-xs text-gray-500">Nome</th>
-              <th className="text-left text-xs text-gray-500">Quantità</th>
+              <th className="text-left text-xs text-muted-foreground">Codice</th>
+              <th className="text-left text-xs text-muted-foreground">Nome</th>
+              <th className="text-left text-xs text-muted-foreground">Quantità</th>
             </tr>
           </thead>
           <tbody>

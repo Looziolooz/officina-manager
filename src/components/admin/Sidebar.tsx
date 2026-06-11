@@ -34,27 +34,27 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <aside 
+    <aside
       className={`
-        bg-slate-950 border-r border-white/10 h-screen sticky top-0 flex flex-col transition-all duration-300 ease-in-out z-50
+        bg-surface border-r border-border h-screen sticky top-0 flex flex-col transition-all duration-300 ease-in-out z-50
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >
       {/* --- LOGO --- */}
-      <div className="h-20 flex items-center justify-center border-b border-white/5 relative">
-        <div className="flex items-center gap-3 text-white font-bold tracking-tighter overflow-hidden whitespace-nowrap">
-          <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+      <div className="h-20 flex items-center justify-center border-b border-border relative">
+        <div className="flex items-center gap-3 text-foreground font-bold tracking-tighter overflow-hidden whitespace-nowrap">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm shrink-0">
             <Car className="text-white" size={20} />
           </div>
           <span className={`transition-opacity duration-300 ${isCollapsed ? "opacity-0 w-0 hidden" : "opacity-100"}`}>
-            GT Service
+            GT <span className="text-primary">Service</span>
           </span>
         </div>
 
         {/* Bottone Toggle */}
-        <button 
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-800 border border-white/20 rounded-full text-white flex items-center justify-center hover:bg-orange-500 hover:border-orange-500 transition-colors shadow-lg z-50 cursor-pointer"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface border border-border rounded-full text-muted-foreground flex items-center justify-center hover:bg-primary hover:border-primary hover:text-white transition-colors shadow-sm z-50 cursor-pointer"
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
@@ -76,12 +76,12 @@ export default function Sidebar() {
                 flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative
                 ${isActive 
                   ? "bg-primary text-white shadow-lg shadow-red-900/20" 
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  : "text-muted-foreground hover:bg-background hover:text-foreground"
                 }
                 ${isCollapsed ? "justify-center" : ""}
               `}
             >
-              <Icon size={20} className={`shrink-0 ${isActive ? "text-white" : "group-hover:text-red-400"} transition-colors`} />
+              <Icon size={20} className={`shrink-0 ${isActive ? "text-white" : "group-hover:text-primary"} transition-colors`} />
               
               <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
                 {item.label}
@@ -89,7 +89,7 @@ export default function Sidebar() {
 
               {/* Tooltip on Hover */}
               {isCollapsed && (
-                <div className="absolute left-full ml-4 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 pointer-events-none z-50">
+                <div className="absolute left-full ml-4 bg-background text-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border pointer-events-none z-50">
                   {item.label}
                 </div>
               )}
@@ -99,7 +99,7 @@ export default function Sidebar() {
       </nav>
 
       {/* --- FOOTER --- */}
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4 border-t border-border">
         <button
           onClick={() => signOut({ callbackUrl: "/auth/login" })}
           className={`

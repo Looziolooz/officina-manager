@@ -117,11 +117,11 @@ export default function KanbanBoard({ initialJobs }: KanbanBoardProps) {
           <div key={col.id} className="flex flex-col h-full min-w-70">
             {/* Column Header */}
             <div className="flex items-center justify-between mb-4 px-2">
-              <h3 className="font-bold text-white flex items-center gap-2">
+              <h3 className="font-bold text-foreground flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${getStatusColor(col.id)}`}></span>
                 {col.title}
               </h3>
-              <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded-full">
+              <span className="bg-background text-muted-foreground text-xs px-2 py-1 rounded-full">
                 {jobs.filter((j) => j.status === col.id).length}
               </span>
             </div>
@@ -156,13 +156,13 @@ function KanbanColumn({ id, jobs }: { id: string; jobs: JobWithDetails[] }) {
     <div
       ref={setNodeRef}
       // FIX: min-h-[500px] -> min-h-125 (Canonical class suggerita da Tailwind)
-      className="bg-slate-900/30 border border-white/5 rounded-2xl p-3 min-h-125 flex-1 flex flex-col gap-3 transition-colors hover:bg-slate-900/40"
+      className="bg-surface/30 border border-border rounded-2xl p-3 min-h-125 flex-1 flex flex-col gap-3 transition-colors hover:bg-surface/40"
     >
       {jobs.map((job) => (
         <DraggableJobCard key={job.id} job={job} />
       ))}
       {jobs.length === 0 && (
-        <div className="text-center text-gray-600 text-sm py-10 italic">
+        <div className="text-center text-muted-foreground text-sm py-10 italic">
           Nessun lavoro
         </div>
       )}
@@ -193,34 +193,34 @@ function DraggableJobCard({ job }: { job: JobWithDetails }) {
 function JobCard({ job, isOverlay }: { job: JobWithDetails; isOverlay?: boolean }) {
   return (
     <div
-      className={`bg-slate-800 p-4 rounded-xl border border-white/10 shadow-lg cursor-grab active:cursor-grabbing group relative overflow-hidden ${
-        isOverlay ? "rotate-2 scale-105 border-primary shadow-xl z-50" : "hover:border-white/20"
+      className={`bg-background p-4 rounded-xl border border-border shadow-lg cursor-grab active:cursor-grabbing group relative overflow-hidden ${
+        isOverlay ? "rotate-2 scale-105 border-primary shadow-xl z-50" : "hover:border-border"
       }`}
     >
       <div className="flex justify-between items-start mb-2">
-        <span className="text-xs font-mono text-gray-500">{job.jobNumber}</span>
+        <span className="text-xs font-mono text-muted-foreground">{job.jobNumber}</span>
         <StatusBadge status={job.status ?? "SCHEDULED"} />
       </div>
 
       <Link 
         href={`/admin/workshop/${job.id}`} 
-        className="block font-bold text-white mb-3 hover:text-primary transition-colors line-clamp-1"
+        className="block font-bold text-foreground mb-3 hover:text-primary transition-colors line-clamp-1"
       >
         {job.title}
       </Link>
 
-      <div className="space-y-2 text-sm text-gray-400">
+      <div className="space-y-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <Car size={14} className="text-blue-400" />
+          <Car size={14} className="text-blue-600" />
           <span className="truncate">
             {job.vehicle.brand} {job.vehicle.modelName}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <User size={14} className="text-green-400" />
+          <User size={14} className="text-success" />
           <span className="truncate">{job.customer.lastName}</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mt-2 pt-2 border-t border-white/5">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
           <Calendar size={12} />
           {format(new Date(job.scheduledDate), "d MMM", { locale: it })}
         </div>

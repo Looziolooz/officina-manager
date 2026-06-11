@@ -33,7 +33,7 @@ export default function NoteEditor({ customerId, type, initialContent, icon, tit
     : "bg-orange-500/5 border-orange-500/20";
     
   const titleClasses = colorClass === "blue" 
-    ? "text-blue-400" 
+    ? "text-blue-600" 
     : "text-red-400";
 
   return (
@@ -44,14 +44,14 @@ export default function NoteEditor({ customerId, type, initialContent, icon, tit
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full bg-slate-950/50 border border-white/5 rounded-xl p-4 text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all min-h-40"
+        className="w-full bg-background/50 border border-border rounded-xl p-4 text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all min-h-40"
         placeholder="Scrivi qui..."
       />
       <div className="flex justify-end mt-4">
         <button 
           onClick={handleSave} 
           disabled={saving}
-          className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+          className="bg-background hover:bg-border text-foreground px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
         >
           {saved ? <Check size={16} /> : <Save size={16} />}
           {saved ? "Salvato" : "Salva"}

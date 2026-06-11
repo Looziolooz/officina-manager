@@ -12,10 +12,10 @@ interface AppointmentCardProps {
 }
 
 const typeColors: Record<string, string> = {
-  DIAGNOSTIC: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  SCHEDULED_WORK: "bg-green-500/20 text-green-400 border-green-500/30",
+  DIAGNOSTIC: "bg-blue-500/20 text-blue-600 border-blue-500/30",
+  SCHEDULED_WORK: "bg-green-500/20 text-success border-green-500/30",
   PICKUP: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  OTHER: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  OTHER: "bg-gray-500/20 text-muted-foreground border-gray-500/30",
 };
 
 const typeLabels: Record<string, string> = {

@@ -25,7 +25,7 @@ export default async function WastePage() {
         <h1 className="text-2xl font-bold">Registro Rifiuti</h1>
         <Link
           href="/admin/warehouse/waste/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-foreground px-4 py-2 rounded hover:bg-blue-700"
         >
           Nuovo Sversamento
         </Link>
@@ -35,7 +35,7 @@ export default async function WastePage() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         {stats.map((stat) => (
           <div key={`${stat.type}-${stat.unit}`} className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">{stat.type}</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{stat.type}</h3>
             <p className="text-2xl font-bold">
               {stat._sum.quantity?.toFixed(2)} {stat.unit}
             </p>
@@ -48,25 +48,25 @@ export default async function WastePage() {
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Data
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Tipo
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Quantità
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Tipo Mov.
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Trasportatore
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Documento
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                 Azioni
               </th>
             </tr>
@@ -74,16 +74,16 @@ export default async function WastePage() {
           <tbody className="divide-y divide-gray-200">
             {records.map((record) => (
               <tr key={record.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                    {record.date ? format(new Date(record.date), "dd/MM/yyyy", { locale: it }) : "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {record.type}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {record.quantity} {record.unit}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   <span className={`px-2 py-1 rounded text-xs ${
                     record.movementType === "OUT" 
                       ? "bg-red-100 text-red-800" 
@@ -92,10 +92,10 @@ export default async function WastePage() {
                     {record.movementType}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {record.carrierName || "-"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {record.documentNumber || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -114,7 +114,7 @@ export default async function WastePage() {
           </tbody>
         </table>
         {records.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             Nessun record trovato
           </div>
         )}

@@ -74,17 +74,17 @@ export default function InvoiceList({ invoices }: InvoiceListProps) {
 
   if (invoices.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-500 bg-white/5 rounded-xl border border-white/10">
+      <div className="text-center py-10 text-muted-foreground bg-background rounded-xl border border-border">
         Nessuna fattura trovata
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-900/50 border border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-surface border border-border rounded-xl overflow-hidden">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="border-b border-white/10 bg-white/5 text-gray-400 text-sm">
+          <tr className="border-b border-border bg-background text-muted-foreground text-sm">
             <th className="p-4">Numero</th>
             <th className="p-4">Data</th>
             <th className="p-4">Cliente</th>
@@ -101,17 +101,17 @@ export default function InvoiceList({ invoices }: InvoiceListProps) {
             return (
             <tr
               key={invoice.id}
-              className="border-b border-white/5 hover:bg-white/5 transition-colors"
+              className="border-b border-border hover:bg-background transition-colors"
             >
-              <td className="p-4 font-mono text-white">{invoice.number}</td>
-              <td className="p-4 text-gray-300">
+              <td className="p-4 font-mono text-foreground">{invoice.number}</td>
+              <td className="p-4 text-foreground">
                 {/* FIX: Usiamo createdAt */}
                 {format(new Date(invoice.createdAt ?? Date.now()), "dd/MM/yyyy")}
               </td>
-              <td className="p-4 text-gray-300">
+              <td className="p-4 text-foreground">
                 {invoice.customer.firstName} {invoice.customer.lastName}
               </td>
-              <td className="p-4 text-right font-bold text-white">
+              <td className="p-4 text-right font-bold text-foreground">
                 {formatCurrency(displayTotal)}
               </td>
               <td className="p-4 text-center">
@@ -121,7 +121,7 @@ export default function InvoiceList({ invoices }: InvoiceListProps) {
               <td className="p-4 text-right">
                 <button
                   onClick={() => handleDownload(invoice)}
-                  className="p-2 hover:bg-white/10 rounded-lg text-blue-400 transition-colors"
+                  className="p-2 hover:bg-background rounded-lg text-blue-600 transition-colors"
                   title="Scarica PDF"
                 >
                   <Download size={18} />
@@ -137,21 +137,21 @@ export default function InvoiceList({ invoices }: InvoiceListProps) {
 
 // Componente helper locale per gestire gli stati corretti
 function StatusBadge({ status }: { status: string }) {
-  let styles = "bg-gray-500/20 text-gray-400";
+  let styles = "bg-gray-500/20 text-muted-foreground";
   let label = status;
 
   switch (status) {
     case "DRAFT":
-      styles = "bg-gray-500/20 text-gray-400";
+      styles = "bg-gray-500/20 text-muted-foreground";
       label = "Bozza";
       break;
     case "ISSUED":
     case "SENT":
-      styles = "bg-amber-500/20 text-amber-400";
+      styles = "bg-amber-500/20 text-warning";
       label = "Emessa";
       break;
     case "PARTIALLY_PAID":
-      styles = "bg-blue-500/20 text-blue-400";
+      styles = "bg-blue-500/20 text-blue-600";
       label = "Parz. Pagata";
       break;
     case "OVERDUE":
@@ -164,7 +164,7 @@ function StatusBadge({ status }: { status: string }) {
       break;
     // Caso fallback per PAID se venisse aggiunto in futuro
     case "PAID": 
-      styles = "bg-green-500/20 text-green-400";
+      styles = "bg-green-500/20 text-success";
       label = "Pagata";
       break;
   }
