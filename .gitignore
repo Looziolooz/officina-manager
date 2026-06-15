@@ -36,6 +36,9 @@ yarn-error.log*
 
 # debug/fix scripts with hardcoded passwords
 /*.mjs
+# ...ma NON i file di config essenziali per la build (vengono comunque committati)
+!postcss.config.mjs
+!eslint.config.mjs
 reset-admin.ts
 
 # vercel
